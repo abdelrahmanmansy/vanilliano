@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fcf5f6" />
+      <stop offset="55%" stop-color="#f2cfd4" />
+      <stop offset="100%" stop-color="rgb(168,66,82)" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)" />
+  <circle cx="100" cy="90" r="40" fill="#ffffff" opacity="0.12" />
+  <circle cx="700" cy="420" r="55" fill="#ffffff" opacity="0.12" />
+  <circle cx="620" cy="80" r="25" fill="#ffffff" opacity="0.15" />
+  <circle cx="150" cy="410" r="30" fill="#ffffff" opacity="0.12" />
+  <circle cx="400" cy="225" r="120" fill="#ffffff" opacity="0.2" />
+  <circle cx="400" cy="225" r="84" fill="#ffffff" opacity="0.3" />
+  <ellipse cx="400" cy="318" rx="150" ry="20" fill="#fdf6f0" stroke="#c4d8d2" stroke-width="3" />
+  <rect x="285" y="250" width="230" height="52" rx="10" fill="#9fc7c1" />
+  <circle cx="285" cy="292" r="14" fill="#9fc7c1" />
+  <circle cx="318" cy="297" r="16" fill="#9fc7c1" />
+  <circle cx="360" cy="293" r="13" fill="#9fc7c1" />
+  <circle cx="400" cy="299" r="17" fill="#9fc7c1" />
+  <circle cx="450" cy="293" r="15" fill="#9fc7c1" />
+  <circle cx="500" cy="296" r="13" fill="#9fc7c1" />
+  <circle cx="515" cy="288" r="11" fill="#9fc7c1" />
+  <rect x="315" y="205" width="170" height="48" rx="9" fill="#fdf6f0" />
+  <rect x="373" y="180" width="54" height="26" rx="6" fill="#9fc7c1" />
+  <circle cx="400" cy="210" r="10" fill="#f07ba0" />
+  <text x="400" y="266" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="17" font-weight="800" fill="#2c6a62">ΒZeeland</text>
+  <rect width="800" height="170" y="330" fill="url(#shine)" />
+  <text x="400" y="398" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="34" font-weight="700" fill="#3c2a20" textLength="560" lengthAdjust="spacingAndGlyphs">باستري زيلاندا</text>
+  <text x="400" y="448" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="20" font-weight="500" fill="#6c4a33" opacity="0.8">Vanilliano</text>
+  <text x="400" y="62" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="16" fill="#6c4a33" opacity="0.5" letter-spacing="4">vanilliano.com</text>
+</svg>

@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+  <defs>
+    <linearGradient id="cbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fdf1ea" />
+      <stop offset="100%" stop-color="#c9778a" />
+    </linearGradient>
+    <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ff9d3c" />
+      <stop offset="100%" stop-color="#ffd166" />
+    </linearGradient>
+    <linearGradient id="cakeDrip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f7e0bb" />
+      <stop offset="100%" stop-color="#f0c98f" />
+    </linearGradient>
+  </defs>
+
+  <rect width="600" height="420" fill="url(#cbg)" />
+  <circle cx="519" cy="140" r="35" fill="#ffffff" opacity="0.27" />
+  <circle cx="346" cy="264" r="43" fill="#ffffff" opacity="0.12" />
+  <circle cx="140" cy="354" r="36" fill="#ffffff" opacity="0.13" />
+  <circle cx="484" cy="360" r="25" fill="#ffffff" opacity="0.27" />
+  <circle cx="92" cy="96" r="26" fill="#ffffff" opacity="0.20" />
+
+  <!-- Confetti -->
+  <circle cx="86" cy="128" r="7" fill="#db8c33" />
+  <circle cx="120" cy="70" r="5" fill="#c64e60" />
+  <circle cx="502" cy="86" r="8" fill="#c64e60" opacity="0.8" />
+  <circle cx="536" cy="150" r="5" fill="#db8c33" />
+  <circle cx="470" cy="52" r="6" fill="#8a5a9e" opacity="0.7" />
+  <rect x="154" y="108" width="14" height="5" rx="2" fill="#8a5a9e" transform="rotate(-25 161 110)" />
+  <rect x="440" y="118" width="14" height="5" rx="2" fill="#c64e60" transform="rotate(20 447 120)" />
+
+  <!-- Balloon left -->
+  <path d="M248 118 C-40 250 40 250 248 118" stroke="#b4496b" stroke-width="2.5" fill="none" opacity="0.6" />
+  <ellipse cx="228" cy="140" rx="46" ry="54" fill="#c64e60" />
+  <path d="M228 140 L216 150 L240 150 Z" fill="#b4496b" />
+  <ellipse cx="215" cy="124" rx="10" ry="15" fill="#ffffff" opacity="0.35" transform="rotate(-25 215 124)" />
+
+  <!-- Balloon right -->
+  <path d="M318 118 C560 250 460 250 318 118" stroke="#b4496b" stroke-width="2.5" fill="none" opacity="0.6" />
+  <ellipse cx="374" cy="132" rx="42" ry="50" fill="#db8c33" />
+  <path d="M374 132 L363 141 L385 141 Z" fill="#c5822c" />
+  <ellipse cx="362" cy="116" rx="9" ry="14" fill="#ffffff" opacity="0.35" transform="rotate(-25 362 116)" />
+
+  <!-- Cake plate -->
+  <ellipse cx="300" cy="368" rx="132" ry="17" fill="#ffffff" opacity="0.85" />
+
+  <!-- Bottom tier -->
+  <rect x="206" y="298" width="188" height="70" rx="14" fill="url(#cakeDrip)" />
+  <rect x="206" y="318" width="188" height="12" fill="#e3b174" rx="6" />
+  <rect x="524" y="120" width="0" height="0" fill="none" />
+  <rect x="236" y="298" width="22" height="70" fill="#c64e60" opacity="0.18" />
+
+  <!-- Middle tier -->
+  <rect x="238" y="250" width="124" height="54" rx="12" fill="#a13a45" />
+  <rect x="238" y="272" width="124" height="10" fill="#8e3240" rx="5" />
+  <rect x="264" y="250" width="18" height="54" fill="#ffffff" opacity="0.14" />
+
+  <!-- Top tier -->
+  <rect x="264" y="204" width="72" height="50" rx="10" fill="#db8c33" />
+  <rect x="264" y="224" width="72" height="9" fill="#c5822c" rx="4" />
+  <rect x="286" y="204" width="15" height="50" fill="#ffffff" opacity="0.2" />
+
+  <!-- Cherry on top -->
+  <circle cx="300" cy="196" r="10" fill="#c64e60" />
+  <path d="M300 188 C305 172 312 168 316 166 C310 170 307 178 300 188 Z" fill="#2f7d32" />
+  <circle cx="297" cy="193" r="2.5" fill="#ffffff" opacity="0.5" />
+
+  <!-- Candles -->
+  <rect x="279" y="158" width="9" height="46" rx="4" fill="#c64e60" />
+  <rect x="293" y="158" width="9" height="46" rx="4" fill="#f0c98f" />
+  <rect x="307" y="158" width="9" height="46" rx="4" fill="#8a5a9e" />
+  <rect x="278" y="150" width="4" height="10" rx="2" fill="#ffd166" />
+  <ellipse cx="296.5" cy="150" rx="5.5" ry="11" fill="url(#flame)" />
+  <rect x="313" y="152" width="4" height="8" rx="2" fill="#ffd166" />
+  <ellipse cx="315" cy="152" rx="5" ry="10" fill="url(#flame)" />
+
+  <!-- Gift box -->
+  <rect x="452" y="318" width="52" height="50" rx="6" fill="#c64e60" />
+  <rect x="452" y="318" width="52" height="14" rx="6" fill="#b4496b" />
+  <rect x="474" y="318" width="8" height="50" fill="#f0c98f" />
+  <rect x="466" y="340" width="24" height="8" rx="4" fill="#db8c33" />
+  <circle cx="478" cy="314" r="9" fill="#db8c33" />
+  <path d="M469 306 C469 298 483 298 483 306" stroke="#db8c33" stroke-width="5" fill="none" />
+
+  <!-- Title band -->
+  <circle cx="300" cy="54" r="118" fill="#ffffff" opacity="0.18" />
+  <text x="300" y="46" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="24" font-weight="800" fill="#8e3240">عيد ميلاد سعيد 🎂</text>
+  <text x="300" y="74" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="15" font-weight="700" fill="#3a2418" opacity="0.85">مستلزمات أعياد الميلاد · فانيليانو</text>
+</svg>
