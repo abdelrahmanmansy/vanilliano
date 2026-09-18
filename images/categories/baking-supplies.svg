@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+  <defs>
+    <linearGradient id="cbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fef7ef" />
+      <stop offset="100%" stop-color="rgb(173,95,106)" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="420" fill="url(#cbg)" />
+  <circle cx="502.78233432137745" cy="319.0973651330174" r="17.6774559811469" fill="#ffffff" opacity="0.21950725440194524" /><circle cx="137.94463116285723" cy="405.997619394503" r="19.373655936747028" fill="#ffffff" opacity="0.22173220442527475" /><circle cx="608.9049673193764" cy="63.55634402938288" r="31.910600134520713" fill="#ffffff" opacity="0.14178763553030788" /><circle cx="521.6075693278284" cy="442.2872249331667" r="24.668191041495284" fill="#ffffff" opacity="0.287004443815306" /><circle cx="546.1529922441403" cy="157.7883503437194" r="27.472061653953205" fill="#ffffff" opacity="0.24251203541965596" /><circle cx="327.19146973500074" cy="303.51663716905546" r="45.90095367554996" fill="#ffffff" opacity="0.1393179350954854" />
+  <circle cx="300" cy="180" r="90" fill="#ffffff" opacity="0.3" />
+  <text x="300" y="268" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="38" font-weight="800" fill="#2b2118">خامات الحلويات والكيك</text>
+  <text x="300" y="312" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="18" fill="#5c4130" opacity="0.85">قسم فانيليانو</text>
+</svg>

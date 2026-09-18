@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+  <defs>
+    <linearGradient id="cbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fdf6f0" />
+      <stop offset="100%" stop-color="rgb(175,112,41)" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="420" fill="url(#cbg)" />
+  <circle cx="719.7634252302136" cy="292.6324647125988" r="41.847434150219186" fill="#ffffff" opacity="0.2460860225331298" /><circle cx="633.9575629279414" cy="287.01381373584957" r="52.84872023943818" fill="#ffffff" opacity="0.16129284988957848" /><circle cx="630.3861720512028" cy="133.98944862025417" r="50.70669356039701" fill="#ffffff" opacity="0.26543130776098867" /><circle cx="202.9004018947184" cy="348.50117235014864" r="40.97307359873128" fill="#ffffff" opacity="0.1711491984367875" /><circle cx="652.9247626116877" cy="232.91862906007182" r="29.774008562010852" fill="#ffffff" opacity="0.24428497330767987" /><circle cx="515.818967486144" cy="141.64146589904811" r="23.015289246471937" fill="#ffffff" opacity="0.18885095487585507" />
+  <circle cx="300" cy="180" r="90" fill="#ffffff" opacity="0.3" />
+  <text x="300" y="268" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="38" font-weight="800" fill="#2b2118">مستلزمات الحفلات</text>
+  <text x="300" y="312" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="18" fill="#5c4130" opacity="0.85">قسم فانيليانو</text>
+</svg>
