@@ -148,6 +148,12 @@ export default function Dashboard() {
           <Link to="/login">
             <Button size="lg">تسجيل الدخول</Button>
           </Link>
+          <Link
+            to="/admin"
+            className="mt-4 block text-xs font-black text-burgundy-700 underline underline-offset-4 hover:text-burgundy-900"
+          >
+            دخول صاحب المتجر (لوحة التحكم) ←
+          </Link>
         </div>
       </div>
     )
