@@ -8,7 +8,7 @@ const AuthContext = createContext(null)
 const DEMO_EMAIL = 'demo@vanilliano.com'
 const DEMO_PASSWORD = 'vanilliano'
 
-const OWNER_EMAIL = 'owner@vanilliano.com'
+const OWNER_EMAIL = 'abdelrahmanahmedmansy@gmail.com'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => storageService.getUser())
