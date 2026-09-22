@@ -5,10 +5,10 @@ const P = (id, data) => {
   const discount = calculateDiscount(data.price, data.oldPrice)
   return {
     id,
-    image: asset(data.image || `/images/products/${id}.svg`),
     badge: data.oldPrice > data.price ? 'offer' : data.badge || null,
     discount,
     ...data,
+    image: asset(data.image || `/images/products/${id}.svg`),
   }
 }
 
