@@ -16,7 +16,6 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Checkout from './pages/Checkout'
 import Dashboard from './pages/Dashboard'
-import AdminLogin from './pages/AdminLogin'
 import NotFound from './pages/NotFound'
 
 const CategoryRoute = () => {
@@ -48,7 +47,6 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/admin" element={<AdminLogin />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

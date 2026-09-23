@@ -12,10 +12,6 @@ export const supabaseService = {
     return configured
   },
 
-  getClient() {
-    return client
-  },
-
   async getProducts() {
     if (!client) return { data: null, error: { message: 'Supabase غير مهيأ' } }
     const { data, error } = await client
@@ -23,35 +19,6 @@ export const supabaseService = {
       .select('*')
       .order('name', { ascending: true })
     return { data: data || null, error }
-  },
-
-  async saveProduct(product) {
-    if (!client) return { data: null, error: { message: 'Supabase غير مهيأ' } }
-    const { data, error } = await client.from('products').upsert(product)
-    return { data, error }
-  },
-
-  async deleteProduct(id) {
-    if (!client) return { data: null, error: { message: 'Supabase غير مهيأ' } }
-    const { data, error } = await client
-      .from('products')
-      .delete()
-      .eq('id', id)
-    return { data, error }
-  },
-
-  async signInAdmin(email, password) {
-    if (!client) return { data: null, error: { message: 'Supabase غير مهيأ' } }
-    const { data, error } = await client.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { data, error }
-  },
-
-  async signOutAdmin() {
-    if (!client) return
-    await client.auth.signOut()
   },
 
   async getReviews() {
@@ -70,10 +37,5 @@ export const supabaseService = {
       .from('reviews')
       .insert({ name, text, rating })
     return { data, error }
-  },
-
-  getAdminSession() {
-    if (!client) return null
-    return client.auth.getSession()
   },
 }
