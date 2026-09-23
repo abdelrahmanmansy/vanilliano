@@ -1,6 +1,7 @@
 import { testimonials } from '../../data/testimonials'
 import RatingStars from '../ui/RatingStars'
 import SectionHeader from '../ui/SectionHeader'
+import ReviewsSection from './ReviewsSection'
 
 export default function Testimonials() {
   return (
@@ -38,6 +39,8 @@ export default function Testimonials() {
             </figure>
           ))}
         </div>
+
+        <ReviewsSection />
       </div>
     </section>
   )

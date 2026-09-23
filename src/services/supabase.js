@@ -54,6 +54,24 @@ export const supabaseService = {
     await client.auth.signOut()
   },
 
+  async getReviews() {
+    if (!client) return { data: [], error: null }
+    const { data, error } = await client
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50)
+    return { data: data || [], error }
+  },
+
+  async addReview({ name, text, rating }) {
+    if (!client) return { data: null, error: { message: 'Supabase غير مهيأ' } }
+    const { data, error } = await client
+      .from('reviews')
+      .insert({ name, text, rating })
+    return { data, error }
+  },
+
   getAdminSession() {
     if (!client) return null
     return client.auth.getSession()
