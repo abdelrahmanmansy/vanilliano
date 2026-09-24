@@ -22,9 +22,9 @@ export const STORE = {
 
 export const PAYMENT = {
   instapay: '01111846842',
-  instapayDisplay: '0111 1846 842',
+  instapayDisplay: '\u200E0111 1846 842',
   vodafoneCash: '01009942440',
-  vodafoneCashDisplay: '010 0994 2440',
+  vodafoneCashDisplay: '\u200E010 0994 2440',
 }
 
 export const WHATSAPP_LINK = (text = '') =>
