@@ -11,6 +11,7 @@ import {
 import Breadcrumbs from '../components/ui/Breadcrumbs'
 import Button from '../components/ui/Button'
 import { EMAIL_REGEX, PHONE_REGEX, STORE, WHATSAPP_LINK } from '../utils/constants'
+import { supabaseService } from '../services/supabase'
 import { toast } from 'react-hot-toast'
 
 const initialForm = {
@@ -76,7 +77,7 @@ export default function Contact() {
     return next
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const next = validate()
     setErrors(next)
@@ -85,13 +86,27 @@ export default function Contact() {
       return
     }
     setSending(true)
-    setTimeout(() => {
-      setSending(false)
-      setSent(true)
-      setForm(initialForm)
-      toast.success('تم إرسال رسالتك بنجاح، سنرد عليك قريباً!')
-      setTimeout(() => setSent(false), 5000)
-    }, 1200)
+    const { error } = await supabaseService.addMessage({
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      subject: form.subject,
+      message: form.message.trim(),
+    })
+    setSending(false)
+    if (error) {
+      toast.error('حصلت مشكلة في الإرسال، جرب تاني')
+      return
+    }
+    supabaseService.addActivity({
+      kind: 'message',
+      label: `رسالة جديدة من ${form.name.trim()}`,
+      meta: { subject: form.subject },
+    })
+    setSent(true)
+    setForm(initialForm)
+    toast.success('تم إرسال رسالتك بنجاح، سنرد عليك قريباً!')
+    setTimeout(() => setSent(false), 5000)
   }
 
   const inputClass = (error) =>

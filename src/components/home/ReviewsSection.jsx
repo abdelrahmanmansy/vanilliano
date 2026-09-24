@@ -56,18 +56,15 @@ export default function ReviewsSection() {
       toast.error('حصلت مشكلة في الإرسال، جرب تاني')
       return
     }
-    if (data?.[0]) {
-      setReviews((r) => [data[0], ...r])
-    } else {
-      setReviews((r) => [
-        { id: String(Date.now()), name: name.trim(), text: text.trim(), rating },
-        ...r,
-      ])
-    }
+    supabaseService.addActivity({
+      kind: 'review',
+      label: `رأي جديد من ${name.trim()} — بانتظار الموافقة`,
+      meta: { name: name.trim(), rating },
+    })
     setName('')
     setText('')
     setRating(5)
-    toast.success('شكراً! رأيك اتنشر دلوقتي')
+    toast.success('شكراً! رأيك اتبعت وبيظهر هنا بعد مراجعته')
   }
 
   return (
@@ -77,7 +74,7 @@ export default function ReviewsSection() {
           شاركنا رأيك 💬
         </h3>
         <p className="mt-2 text-center text-sm text-burgundy-900/50">
-          جربتنا في متجرك وعلى موقعنا؟ اكتب رأيك ويطلع هنا فوراً.
+          جربتنا في متجرك وعلى موقعنا؟ اكتب رأيك ويظهر هنا بعد مراجعته.
         </p>
 
         <form

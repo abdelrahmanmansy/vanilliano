@@ -14,6 +14,7 @@ import {
   Smartphone,
 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../utils/format'
 import { validateCoupon } from '../data/coupons'
@@ -204,6 +205,12 @@ export default function Checkout() {
       STORAGE_KEYS.orders,
       JSON.stringify([order, ...existing]),
     )
+    supabaseService.addOrder(order)
+    supabaseService.addActivity({
+      kind: 'purchase',
+      label: `طلب جديد ${order.id} — ${order.shippingInfo?.name} — ${formatPrice(total)} ج.م`,
+      meta: { order: order.id, total },
+    })
     return order
   }
 

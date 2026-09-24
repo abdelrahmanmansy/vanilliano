@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { storageService } from '../services/storage'
+import { supabaseService } from '../services/supabase'
 
 const AuthContext = createContext(null)
 
@@ -35,6 +36,11 @@ export function AuthProvider({ children }) {
           storageService.saveUser(newUser)
           setUser(newUser)
           toast.success('تم تسجيل الدخول بنجاح، أهلاً بعودتك!')
+          supabaseService.addActivity({
+            kind: 'login',
+            label: `تسجيل دخول: ${email}`,
+            meta: { email },
+          })
           resolve(newUser)
         } else {
           reject(
@@ -64,15 +70,26 @@ export function AuthProvider({ children }) {
         storageService.saveUser(newUser)
         setUser(newUser)
         toast.success(`أهلاً بك في فانيليانو، ${name}!`)
+        supabaseService.addActivity({
+          kind: 'login',
+          label: `حساب جديد: ${email}`,
+          meta: { email },
+        })
         resolve(newUser)
       }, 900)
     })
   }
 
   const logout = () => {
+    const email = user?.email || 'غير معروف'
     storageService.saveUser(null)
     setUser(null)
     toast.success('تم تسجيل الخروج بنجاح')
+    supabaseService.addActivity({
+      kind: 'logout',
+      label: `تسجيل خروج: ${email}`,
+      meta: { email },
+    })
   }
 
   return (
