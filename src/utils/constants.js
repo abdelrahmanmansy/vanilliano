@@ -9,7 +9,7 @@ export const STORAGE_KEYS = {
 export const STORE = {
   name: 'فانيليانو Vanilliano',
   domain: 'vanilliano.com',
-  email: 'hello@vanilliano.com',
+  email: 'vanilliano@gmail.com',
   currency: 'ج.م',
   whatsapp: '201118215741',
   phoneDisplay: '011 1821 5741 · 010 0994 2440',
