@@ -631,7 +631,7 @@ function Orders() {
       <div className="card">
         {loading ? (
           <Loading />
-        ) : orders.length === 0 ? (
+        ) : (orders || []).length === 0 ? (
           <div className="empty">لا توجد طلبات بعد</div>
         ) : (
           <table>
@@ -639,7 +639,7 @@ function Orders() {
               <tr><th>رقم</th><th>الاسم</th><th>الجوال</th><th>العنوان</th><th>الدفع</th><th>المنتجات</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th></tr>
             </thead>
             <tbody>
-              {orders.map((o) => (
+              {(orders || []).map((o) => (
                 <tr key={o.id}>
                   <td className="bold">{o.id}</td>
                   <td>{o.name}</td>
@@ -793,8 +793,8 @@ function Reviews() {
     }
   }
 
-  const pending = reviews.filter((r) => !r.approved)
-  const approved = reviews.filter((r) => r.approved)
+  const pending = (reviews || []).filter((r) => !r.approved)
+  const approved = (reviews || []).filter((r) => r.approved)
 
   return (
     <>
@@ -889,10 +889,10 @@ function Messages() {
       <div className="card">
         {loading ? (
           <Loading />
-        ) : messages.length === 0 ? (
+        ) : (messages || []).length === 0 ? (
           <div className="empty">لا توجد رسائل بعد</div>
         ) : (
-          messages.map((m) => (
+          (messages || []).map((m) => (
             <div className={`msg-item ${m.replied ? 'replied' : ''}`} key={m.id}>
               <div className="space mb">
                 <div className="row">
@@ -942,7 +942,7 @@ function Activity() {
       <div className="card">
         {loading ? (
           <Loading />
-        ) : activity.length === 0 ? (
+        ) : (activity || []).length === 0 ? (
           <div className="empty">لا يوجد نشاط بعد</div>
         ) : (
           <table>
@@ -950,7 +950,7 @@ function Activity() {
               <tr><th>النوع</th><th>الحدث</th><th>الوقت</th></tr>
             </thead>
             <tbody>
-              {activity.map((a) => (
+              {(activity || []).map((a) => (
                 <tr key={a.id}>
                   <td><span className="badge gray">{KIND_LABELS[a.kind] || a.kind}</span></td>
                   <td>{a.label}</td>
