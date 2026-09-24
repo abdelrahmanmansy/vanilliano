@@ -38,6 +38,23 @@ const fmtDate = (iso) => {
   })
 }
 
+const assetURL = (src) => {
+  if (!src || typeof src !== 'string') return src
+  const base = import.meta.env.BASE_URL || '/'
+  if (src.startsWith('http') || src.startsWith(base) || src.startsWith('/vanilliano/')) return src
+  if (src.startsWith('/')) return base.replace(/\/$/, '') + src
+  return src
+}
+
+function Flash({ msg }) {
+  if (!msg) return null
+  return (
+    <div style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
+      {msg}
+    </div>
+  )
+}
+
 const emptyProduct = {
   id: '',
   name: '',
@@ -322,14 +339,22 @@ function Overview() {
 function Products() {
   const { data: products, loading, error, refresh } = useLoad(() => adminService.getProducts())
   const [editing, setEditing] = useState(null)
+  const [flash, setFlash] = useState('')
+
+  function notify(msg) {
+    setFlash(msg)
+    clearTimeout(window.__adminFlashTimer)
+    window.__adminFlashTimer = setTimeout(() => setFlash(''), 4000)
+  }
 
   async function save(product) {
     try {
       await adminService.upsertProduct(product)
       setEditing(null)
       await refresh()
+      notify(product.id ? 'تم حفظ التعديلات وظهرت في المتجر ✓' : 'تمت إضافة المنتج الجديد وظهر في المتجر ✓')
     } catch (e) {
-      alert('تعذر الحفظ: ' + e.message)
+      notify('تعذر الحفظ: ' + e.message)
     }
   }
 
@@ -338,8 +363,9 @@ function Products() {
     try {
       await adminService.deleteProduct(id)
       await refresh()
+      notify('تم حذف المنتج ✓')
     } catch (e) {
-      alert('تعذر الحذف: ' + e.message)
+      notify('تعذر الحذف: ' + e.message)
     }
   }
 
@@ -353,8 +379,16 @@ function Products() {
         <button className="btn primary" onClick={() => setEditing({ ...emptyProduct })}>+ منتج جديد</button>
       </div>
 
+      <Flash msg={flash} />
       <ErrorBox error={error} />
-      {editing && <ProductForm product={editing} onSave={save} onCancel={() => setEditing(null)} />}
+      {editing && (
+        <ProductForm
+          key={editing.id || 'new'}
+          product={editing}
+          onSave={save}
+          onCancel={() => setEditing(null)}
+        />
+      )}
 
       <div className="card">
         {loading ? (
@@ -365,12 +399,12 @@ function Products() {
               <tr><th>الصورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>القديم</th><th>الخصم</th><th>المخزون</th><th>شارة</th><th></th></tr>
             </thead>
             <tbody>
-              {products.map((p) => {
+              {(products || []).map((p) => {
                 const cat = CATEGORIES.find((c) => c.id === p.category)
                 const disc = calculateDiscount(p.price, p.oldPrice)
                 return (
                   <tr key={p.id}>
-                    <td>{p.image ? <img src={p.image} alt="" /> : '—'}</td>
+                    <td>{p.image ? <img src={assetURL(p.image)} alt="" /> : '—'}</td>
                     <td className="bold">{p.name}</td>
                     <td>{cat ? cat.name : p.category}</td>
                     <td className="bold">{formatPrice(p.price)}</td>
