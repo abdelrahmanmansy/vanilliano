@@ -17,6 +17,7 @@ import { useCart } from '../context/CartContext'
 import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../utils/format'
+import { asset } from '../utils/asset'
 import { validateCoupon } from '../data/coupons'
 import {
   SHIPPING_COST,
@@ -621,6 +622,23 @@ export default function Checkout() {
                 </button>
               ))}
             </div>
+
+            {payment === 'instapay' && (
+              <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-vanilla-100 bg-cream-50 p-4 text-center">
+                <img
+                  src={asset('/images/instapay-qr.jpg')}
+                  alt="كود QR لانستا باي"
+                  className="h-44 w-44 rounded-2xl bg-white object-contain p-2 shadow-sm"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+                <p className="text-xs font-black text-burgundy-950">
+                  امسح الكود بالتطبيق لتحويل المبلغ مباشرة
+                </p>
+                <p className="text-[11px] text-burgundy-900/50">
+                  أو حوّل على: {PAYMENT.instapayDisplay}
+                </p>
+              </div>
+            )}
 
             <p className="mt-4 rounded-2xl bg-vanilla-50 p-4 text-xs leading-relaxed text-burgundy-900/60">
               💚 الطلب يصل جاهزاً على واتساب مع رقم الدفع — لا يُحصل أي مبلغ الآن،
