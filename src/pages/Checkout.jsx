@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   User,
@@ -92,6 +92,21 @@ export default function Checkout() {
     notes: '',
   })
   const [errors, setErrors] = useState({})
+  const [memberPercent, setMemberPercent] = useState(0)
+
+  useEffect(() => {
+    let alive = true
+    if (user?.email) {
+      supabaseService.firstOrderDiscount(user.email).then((p) => {
+        if (alive) setMemberPercent(p)
+      })
+    } else {
+      setMemberPercent(0)
+    }
+    return () => {
+      alive = false
+    }
+  }, [user?.email])
 
   const shipping =
     deliveryMethod === 'pickup' ||
@@ -100,7 +115,8 @@ export default function Checkout() {
       ? 0
       : SHIPPING_COST
   const discount = coupon ? coupon.discountValue : 0
-  const total = Math.max(subtotal - discount, 0) + shipping
+  const memberAmount = Math.round((subtotal * memberPercent) / 100)
+  const total = Math.max(subtotal - discount - memberAmount, 0) + shipping
 
   const setField = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }))
@@ -167,6 +183,8 @@ export default function Checkout() {
       if (item.image) lines.push(`🖼️ صورة المنتج: ${siteURL}${item.image}`)
     })
     if (orderDiscount > 0) lines.push(`🎁 الخصم: -${formatPrice(orderDiscount)} ج.م`)
+    if (memberAmount > 0)
+      lines.push(`🎉 خصم أول طلب لعضو جديد (${memberPercent}%): -${formatPrice(memberAmount)} ج.م`)
     lines.push(
       '',
       `💵 المجموع الفرعي: ${formatPrice(subtotal)} ج.م`,
@@ -202,6 +220,10 @@ export default function Checkout() {
     const existing = JSON.parse(
       window.localStorage.getItem(STORAGE_KEYS.orders) || '[]',
     )
+    const notes = String(order.shippingInfo?.notes || '').trim()
+    order.shippingInfo.notes = memberAmount > 0
+      ? `${notes}${notes ? ' — ' : ''}خصم أول طلب ${memberPercent}% = -${formatPrice(memberAmount)} ج.م`.trim()
+      : notes
     window.localStorage.setItem(
       STORAGE_KEYS.orders,
       JSON.stringify([order, ...existing]),
@@ -340,6 +362,18 @@ export default function Checkout() {
       <p className="mb-8 text-sm text-burgundy-900/50">
         عبّئ بياناتك وستصلك الرسالة جاهزة على واتساب لتأكيد الطلب.
       </p>
+
+      {memberPercent > 0 && (
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
+          <span className="text-2xl">🎉</span>
+          <div>
+            <p className="text-sm font-black">مبروك! خصم أول طلب {memberPercent}%</p>
+            <p className="text-xs font-bold text-emerald-600/80">
+              لإنك عضو جديد، اتخصم -{formatPrice(memberAmount)} ج.م من طلبك الحالي.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Form */}
@@ -671,6 +705,12 @@ export default function Checkout() {
               <div className="flex justify-between text-emerald-600">
                 <span>الخصم</span>
                 <span className="font-bold">-{formatPrice(discount)} ج.م</span>
+              </div>
+            )}
+            {memberAmount > 0 && (
+              <div className="flex justify-between text-emerald-600">
+                <span>خصم أول طلب ({memberPercent}%)</span>
+                <span className="font-bold">-{formatPrice(memberAmount)} ج.م</span>
               </div>
             )}
             <div className="flex justify-between text-burgundy-900/70">

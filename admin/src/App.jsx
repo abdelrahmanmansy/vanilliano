@@ -666,7 +666,11 @@ function Orders() {
               {(orders || []).map((o) => (
                 <tr key={o.id}>
                   <td className="bold">{o.id}</td>
-                  <td>{o.name}</td>
+                  <td>{o.name}
+                    {o.note?.includes('خصم أول طلب') && (
+                      <div className="muted" style={{ fontSize: 11 }} title={o.note}>🎁 خصم أول طلب 26%</div>
+                    )}
+                  </td>
                   <td dir="ltr">{o.phone}</td>
                   <td dir="ltr">
                     {o.email

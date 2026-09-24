@@ -191,3 +191,24 @@ $$;
 
 revoke all on function public.top_sellers(int) from public;
 grant execute on function public.top_sellers(int) to anon, authenticated;
+
+-- ============================================================
+-- خصم أول طلب للعضو المسجل — دالة آمنة للزائر
+-- بترجع 26 لو الأيميل ما عندهوش طلبات قبله (غير ملغي) و 0 غير كده
+-- ============================================================
+create or replace function public.first_order_discount(p_email text)
+returns numeric
+language sql security definer stable as $$
+  select case
+    when p_email is null or btrim(p_email) = '' then 0
+    when exists (
+      select 1 from public.orders
+      where lower(email) = lower(btrim(p_email))
+        and status is distinct from 'ملغي'
+    ) then 0
+    else 26
+  end;
+$$;
+
+revoke all on function public.first_order_discount(text) from public;
+grant execute on function public.first_order_discount(text) to anon, authenticated;

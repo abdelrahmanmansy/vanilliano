@@ -27,6 +27,16 @@ export const supabaseService = {
     return { data: data || [], error }
   },
 
+  async firstOrderDiscount(email) {
+    if (!client || !email) return 0
+    const { data, error } = await client.rpc('first_order_discount', { p_email: email })
+    if (error) {
+      console.error('first_order_discount:', error.message)
+      return 0
+    }
+    return Number(data) || 0
+  },
+
   async getReviews() {
     if (!client) return { data: [], error: null }
     const { data, error } = await client
