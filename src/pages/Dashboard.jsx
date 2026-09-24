@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { asset } from '../utils/asset'
 import { Link } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -15,6 +14,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice, formatDate } from '../utils/format'
 import { STORAGE_KEYS } from '../utils/constants'
+import { supabaseService } from '../services/supabase'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
@@ -28,6 +28,8 @@ const tabs = [
   { id: 'settings', label: 'الإعدادات', icon: Settings },
 ]
 
+const DEMO_IDS = new Set(['VNL-991234', 'VNL-997643'])
+
 export default function Dashboard() {
   const { user, logout } = useAuth()
   const { products } = useProducts()
@@ -40,44 +42,25 @@ export default function Dashboard() {
     const stored = JSON.parse(
       window.localStorage.getItem(STORAGE_KEYS.orders) || '[]',
     )
-    if (stored.length === 0) {
-      const demo = [
-        {
-          id: 'VNL-991234',
-          date: new Date(Date.now() - 4 * 864e5).toISOString(),
-          items: [
-            { id: 'macaron-box', name: 'علبة ماكارون هدية', price: 95, quantity: 2, image: asset('/images/products/macaron-box.svg') },
-            { id: 'favor-box-gold', name: 'صندوق توزيعات ذهبي', price: 45, quantity: 3, image: asset('/images/products/favor-box-gold.svg') },
-          ],
-          subtotal: 325,
-          discount: 0,
-          shipping: 0,
-          total: 325,
-          paymentMethod: 'fawry',
-          status: 'تم التسليم',
-          shippingInfo: { name: 'متجر الدروس' },
-        },
-        {
-          id: 'VNL-997643',
-          date: new Date(Date.now() - 2 * 864e5).toISOString(),
-          items: [
-            { id: 'confetti-candle', name: 'شمعة قصاصات معدنية', price: 35, quantity: 1, image: asset('/images/products/confetti-candle.svg') },
-          ],
-          subtotal: 35,
-          discount: 0,
-          shipping: 25,
-          total: 60,
-          paymentMethod: 'cod',
-          status: 'قيد التجهيز',
-          shippingInfo: { name: 'أم خالد' },
-        },
-      ]
-      setOrders(demo)
-      window.localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(demo))
-    } else {
-      setOrders(stored)
+    const local = (Array.isArray(stored) ? stored : []).filter(
+      (o) => o && !DEMO_IDS.has(o.id),
+    )
+    setOrders(local)
+    if (user?.email) {
+      supabaseService.getMyOrders(user.email).then(({ data }) => {
+        if (!Array.isArray(data)) return
+        const merged = [
+          ...local,
+          ...data.filter((d) => !local.some((l) => l.id === d.id)),
+        ]
+        merged.sort(
+          (a, b) =>
+            new Date(b.created_at || b.date) - new Date(a.created_at || a.date),
+        )
+        setOrders(merged)
+      })
     }
-  }, [])
+  }, [user?.email])
 
   const { getById } = useCatalog(products)
   const wishlistProducts = wishlist.map((id) => getById(id)).filter(Boolean)
@@ -175,7 +158,7 @@ export default function Dashboard() {
                           {o.id}
                         </p>
                         <p className="text-[11px] text-burgundy-900/40">
-                          {formatDate(o.date)} · {o.shippingInfo?.name}
+                          {formatDate(o.created_at || o.date)} · {o.shippingInfo?.name || ''}
                         </p>
                       </div>
                       <div className="text-left">
@@ -239,7 +222,7 @@ export default function Dashboard() {
                       طلب رقم {o.id}
                     </p>
                     <p className="text-[11px] text-burgundy-900/40">
-                      {formatDate(o.date)} · {o.paymentMethod === 'instapay' ? 'انستا باي' : o.paymentMethod === 'vodafone' ? 'فودافون كاش' : o.paymentMethod === 'fawry' ? 'فودافون كاش / انستا باي' : o.paymentMethod === 'cod' ? 'عند الاستلام' : 'واتساب'}
+                      {formatDate(o.created_at || o.date)} · {o.payment_method || o.paymentMethod === 'instapay' ? 'انستا باي' : o.payment_method || o.paymentMethod === 'vodafone' ? 'فودافون كاش' : o.payment_method || o.paymentMethod === 'fawry' ? 'فودافون كاش / انستا باي' : o.payment_method || o.paymentMethod === 'cod' ? 'عند الاستلام' : 'واتساب'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -251,8 +234,14 @@ export default function Dashboard() {
                 </div>
                 <ul className="space-y-2">
                   {o.items.map((item) => (
-                    <li key={item.id} className="flex items-center gap-3">
-                      <img src={item.image} alt="" className="h-10 w-10 rounded-xl object-cover" />
+                    <li key={item.id || item.name} className="flex items-center gap-3">
+                      {item.image ? (
+                        <img src={item.image} alt="" className="h-10 w-10 rounded-xl object-cover" />
+                      ) : (
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cream-100 text-xs font-black text-burgundy-700">
+                          {String(item.name || '؟').slice(0, 1)}
+                        </span>
+                      )}
                       <span className="flex-1 text-sm font-bold text-burgundy-950">
                         {item.name} <span className="text-xs text-burgundy-900/40">× {item.quantity}</span>
                       </span>

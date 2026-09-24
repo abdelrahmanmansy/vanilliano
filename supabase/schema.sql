@@ -212,3 +212,30 @@ $$;
 
 revoke all on function public.first_order_discount(text) from public;
 grant execute on function public.first_order_discount(text) to anon, authenticated;
+
+-- ============================================================
+-- طلبات العميل (قائمة الأوردرات بالبريد) — دالة آمنة للزائر
+-- بترجع طلبات العميل باسمه والمنتجات والإجمالي والحالة بس
+-- (من غير موبايل/عنوان كامل لتقليل التعرض)
+-- ============================================================
+create or replace function public.my_orders(p_email text)
+returns table (
+  id text,
+  created_at timestamptz,
+  items jsonb,
+  total numeric,
+  status text,
+  payment_method text,
+  note text
+)
+language sql security definer stable as $$
+  select o.id, o.created_at, o.items, o.total, o.status, o.payment_method, o.note
+  from public.orders o
+  where o.email is not null
+    and btrim(o.email) <> ''
+    and lower(o.email) = lower(btrim(p_email))
+  order by o.created_at desc;
+$$;
+
+revoke all on function public.my_orders(text) from public;
+grant execute on function public.my_orders(text) to anon, authenticated;

@@ -37,6 +37,12 @@ export const supabaseService = {
     return Number(data) || 0
   },
 
+  async getMyOrders(email) {
+    if (!client || !email) return { data: [], error: null }
+    const { data, error } = await client.rpc('my_orders', { p_email: email })
+    return { data: data || [], error }
+  },
+
   async getReviews() {
     if (!client) return { data: [], error: null }
     const { data, error } = await client
