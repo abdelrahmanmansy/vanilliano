@@ -17,7 +17,7 @@ import { useCart } from '../context/CartContext'
 import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../utils/format'
-import { asset } from '../utils/asset'
+import instapayQr from '../assets/instapay-qr.jpg'
 import { validateCoupon } from '../data/coupons'
 import {
   SHIPPING_COST,
@@ -626,10 +626,9 @@ export default function Checkout() {
             {payment === 'instapay' && (
               <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-vanilla-100 bg-cream-50 p-4 text-center">
                 <img
-                  src={asset('/images/instapay-qr.jpg')}
+                  src={instapayQr}
                   alt="كود QR لانستا باي"
                   className="h-44 w-44 rounded-2xl bg-white object-contain p-2 shadow-sm"
-                  onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
                 <p className="text-xs font-black text-burgundy-950">
                   امسح الكود بالتطبيق لتحويل المبلغ مباشرة
