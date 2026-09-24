@@ -43,7 +43,7 @@ const text = await page.evaluate(() => document.body.innerText)
 console.log('2) الطلب الحقيقي ظاهر في القائمة؟', text.includes(ORDER_ID) ? 'نعم ✅' : 'لا ❌')
 console.log('3) المنتجات بالإجمالي ظاهرة؟', text.includes('بالونات ذهبية') && text.includes('علبة ماكارون') ? 'نعم ✅' : 'لا ❌')
 console.log('4) مفيش طلبات وهمية؟', !text.includes('VNL-991234') && !text.includes('أم خالد') ? 'نعم ✅' : 'لا ❌')
-console.log('5) فيه إجمالي الطلب (٢٧٣ج)؟', text.includes('273') ? 'نعم ✅ (بالأرقام العربية ٢٧٣)' : 'لا ❌')
+console.log('5) فيه إجمالي الطلب بالعربي؟', text.includes('٢٧٣') ? 'نعم ✅ (٢٧٣ج)' : 'لا ❌')
 
 await owner.from('orders').delete().eq('id', ORDER_ID)
 console.log('6) تنظيف ✅')
