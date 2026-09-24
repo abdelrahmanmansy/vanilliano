@@ -32,9 +32,15 @@ const positions = await page.evaluate(() => {
     }
     return null
   }
-  const els = [...document.querySelectorAll('p')]
-  const insta = els.find((e) => e.textContent.includes('تحويل فوري بالموبايل'))
-  const voda = els.find((e) => e.textContent.includes('تحويل على المحفظة'))
+  const findInnermost = (phrase) => {
+    let best = null
+    for (const e of document.querySelectorAll('div,p,span,button,label')) {
+      if (e.textContent.includes(phrase) && (!best || e.textContent.length < best.textContent.length)) best = e
+    }
+    return best
+  }
+  const insta = findInnermost('تحويل فوري بالموبايل')
+  const voda = findInnermost('تحويل على المحفظة')
   return {
     insta: insta ? ['0111', '1846', '842'].map((c) => measureLeft(insta, c)) : null,
     voda: voda ? ['010', '0994', '2440'].map((c) => measureLeft(voda, c)) : null,
