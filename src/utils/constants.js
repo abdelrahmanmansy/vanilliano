@@ -21,8 +21,8 @@ export const STORE = {
 }
 
 export const PAYMENT = {
-  instapay: '01118215741',
-  instapayDisplay: '011 1821 5741',
+  instapay: '01111846842',
+  instapayDisplay: '0111 1846 842',
   vodafoneCash: '01009942440',
   vodafoneCashDisplay: '010 0994 2440',
 }
