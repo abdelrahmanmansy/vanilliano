@@ -171,15 +171,20 @@ returns table (
   total numeric
 )
 language sql security definer stable as $$
+  with exploded as (
+    select o.status,
+           j.value as it
+    from public.orders o,
+    lateral jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) as j(value)
+  )
   select
-    items->>'id' as product_id,
-    items->>'name' as product_name,
-    sum((items->>'quantity')::int)::bigint as qty,
-    sum((items->>'quantity')::int * coalesce((items->>'price')::numeric, 0)) as total
-  from public.orders,
-  lateral jsonb_array_elements(coalesce(items, '[]'::jsonb)) as items
+    it->>'id' as product_id,
+    it->>'name' as product_name,
+    sum((it->>'quantity')::int)::bigint as qty,
+    sum((it->>'quantity')::int * coalesce((it->>'price')::numeric, 0)) as total
+  from exploded
   where status is distinct from 'ملغي'
-  group by items->>'id', items->>'name'
+  group by it->>'id', it->>'name'
   order by qty desc
   limit max_count;
 $$;
