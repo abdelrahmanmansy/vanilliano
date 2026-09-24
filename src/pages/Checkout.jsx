@@ -110,8 +110,8 @@ export default function Checkout() {
   const validate = () => {
     const next = {}
     if (form.name.trim().length < 3) next.name = 'يرجى إدخال الاسم الكامل'
-    if (form.email && !EMAIL_REGEX.test(form.email))
-      next.email = 'بريد إلكتروني غير صحيح'
+    if (!form.email.trim() || !EMAIL_REGEX.test(form.email))
+      next.email = form.email.trim() ? 'بريد إلكتروني غير صحيح' : 'يرجى إدخال البريد الإلكتروني لنتواصل معك'
     if (!PHONE_REGEX.test(form.phone)) next.phone = 'رقم جوال غير صحيح'
     if (deliveryMethod === 'delivery') {
       if (!form.city) next.city = 'اختر المنطقة'
@@ -149,6 +149,7 @@ export default function Checkout() {
       '',
       `👤 الاسم: ${form.name}`,
       `📞 جوال العميل: ${form.phone}`,
+      `📧 بريد العميل: ${form.email.trim()}`,
     ]
     if (deliveryMethod === 'delivery') {
       lines.push(`🚚 التوصيل إلى: ${form.city} — ${form.address}`)
@@ -392,7 +393,8 @@ export default function Checkout() {
               </div>
               <div className="sm:col-span-2">
                 <label className="mb-1.5 block text-xs font-black text-burgundy-900">
-                  البريد الإلكتروني (اختياري)
+                  البريد الإلكتروني{' '}
+                  <span className="text-burgundy-700">(راجع عليه خطوات طلبك)</span>
                 </label>
                 <input
                   type="email"

@@ -660,7 +660,7 @@ function Orders() {
         ) : (
           <table>
             <thead>
-              <tr><th>رقم</th><th>الاسم</th><th>الجوال</th><th>العنوان</th><th>الدفع</th><th>المنتجات</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th></tr>
+              <tr><th>رقم</th><th>الاسم</th><th>الجوال</th><th>البريد</th><th>العنوان</th><th>الدفع</th><th>المنتجات</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th></tr>
             </thead>
             <tbody>
               {(orders || []).map((o) => (
@@ -668,6 +668,11 @@ function Orders() {
                   <td className="bold">{o.id}</td>
                   <td>{o.name}</td>
                   <td dir="ltr">{o.phone}</td>
+                  <td dir="ltr">
+                    {o.email
+                      ? <a href={`mailto:${o.email}`} title="راسل العميل" style={{ color: 'inherit' }}>{o.email}</a>
+                      : '—'}
+                  </td>
                   <td>{[o.city, o.address].filter(Boolean).join(' — ')}</td>
                   <td>{o.payment_method === 'cod' ? 'عند الاستلام' : o.payment_method === 'instapay' ? 'انستا باي' : o.payment_method === 'vodafone' ? 'فودافون كاش' : o.payment_method || '—'}</td>
                   <td>
