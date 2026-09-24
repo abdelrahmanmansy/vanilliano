@@ -361,6 +361,13 @@ function Products() {
     window.__adminFlashTimer = setTimeout(() => setFlash(''), 4000)
   }
 
+  useEffect(() => {
+    if (!editing) return
+    const onKey = (e) => { if (e.key === 'Escape') setEditing(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editing])
+
   async function save(product) {
     try {
       await adminService.upsertProduct(product)
@@ -405,12 +412,17 @@ function Products() {
         <div className="muted mt">{filtered.length} منتج من أصل {products?.length || 0}</div>
       </div>
       {editing && (
-        <ProductForm
-          key={editing.id || 'new'}
-          product={editing}
-          onSave={save}
-          onCancel={() => setEditing(null)}
-        />
+        <div
+          className="modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditing(null) }}
+        >
+          <ProductForm
+            key={editing.id || 'new'}
+            product={editing}
+            onSave={save}
+            onCancel={() => setEditing(null)}
+          />
+        </div>
       )}
 
       <div className="card">
@@ -478,7 +490,7 @@ function ProductForm({ product, onSave, onCancel }) {
   }
 
   return (
-    <form className="card" onSubmit={submit}>
+    <form className="card modal-form" onSubmit={submit}>
       <div className="space mb">
         <h2>{product.id ? 'تعديل منتج' : 'منتج جديد'}</h2>
         <button type="button" className="btn small" onClick={onCancel}>إلغاء</button>
@@ -587,6 +599,13 @@ function Orders() {
     window.__adminOrdersFlashTimer = setTimeout(() => setFlash(''), 4000)
   }
 
+  useEffect(() => {
+    if (!showPurchase) return
+    const onKey = (e) => { if (e.key === 'Escape') setShowPurchase(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showPurchase])
+
   async function setStatus(order, status) {
     setSavingId(order.id)
     try {
@@ -626,7 +645,12 @@ function Orders() {
       <Flash msg={flash} />
       <ErrorBox error={error} />
       {showPurchase && (
-        <PurchaseForm products={products || []} onSave={recordPurchase} onCancel={() => setShowPurchase(false)} />
+        <div
+          className="modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowPurchase(false) }}
+        >
+          <PurchaseForm products={products || []} onSave={recordPurchase} onCancel={() => setShowPurchase(false)} />
+        </div>
       )}
       <div className="card">
         {loading ? (
@@ -709,7 +733,7 @@ function PurchaseForm({ products, onSave, onCancel }) {
   }
 
   return (
-    <form className="card" onSubmit={submit}>
+    <form className="card modal-form" onSubmit={submit}>
       <div className="space mb">
         <h2>تسجيل عملية شراء جديدة</h2>
         <button type="button" className="btn small" onClick={onCancel}>إلغاء</button>
