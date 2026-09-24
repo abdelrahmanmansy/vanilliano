@@ -33,8 +33,20 @@ export const adminService = {
     return run(client.from('orders').select('*').order('created_at', { ascending: false }))
   },
 
+  createOrder(order) {
+    return run(client.from('orders').insert(order).select('id'))
+  },
+
   updateOrder(id, patch) {
     return run(client.from('orders').update(patch).eq('id', id))
+  },
+
+  getTopSellers(maxCount = 100) {
+    return run(client.rpc('top_sellers', { max_count: maxCount }))
+  },
+
+  addActivity(kind, label, meta) {
+    return run(client.from('activity').insert({ kind, label, meta: meta || null }))
   },
 
   getReviews() {

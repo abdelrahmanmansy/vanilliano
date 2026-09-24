@@ -21,6 +21,12 @@ export const supabaseService = {
     return { data: data || null, error }
   },
 
+  async getTopSellers(maxCount = 8) {
+    if (!client) return { data: [], error: null }
+    const { data, error } = await client.rpc('top_sellers', { max_count: maxCount })
+    return { data: data || [], error }
+  },
+
   async getReviews() {
     if (!client) return { data: [], error: null }
     const { data, error } = await client

@@ -1,6 +1,7 @@
 import Hero from '../components/home/Hero'
 import CategoryShowcase from '../components/home/CategoryShowcase'
 import FeaturedProducts from '../components/home/FeaturedProducts'
+import BestSellers from '../components/home/BestSellers'
 import SpecialOffers from '../components/home/SpecialOffers'
 import WhyUs from '../components/home/WhyUs'
 import NewArrivals from '../components/home/NewArrivals'
@@ -14,6 +15,7 @@ export default function Home() {
       <Hero />
       <CategoryShowcase />
       <FeaturedProducts />
+      <BestSellers />
       <SpecialOffers />
       <WhyUs />
       <NewArrivals />

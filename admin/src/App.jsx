@@ -159,6 +159,7 @@ function Shell({ user, onLogout }) {
   const tabs = [
     { id: 'overview', label: 'نظرة عامة', icon: '📊' },
     { id: 'products', label: 'المنتجات', icon: '🧁' },
+    { id: 'bestsellers', label: 'الأكثر مبيعاً', icon: '🏆' },
     { id: 'orders', label: 'الطلبات', icon: '🛒' },
     { id: 'reviews', label: 'آراء العملاء', icon: '⭐' },
     { id: 'messages', label: 'الرسائل', icon: '✉️' },
@@ -188,6 +189,7 @@ function Shell({ user, onLogout }) {
       <main className="main">
         {tab === 'overview' && <Overview />}
         {tab === 'products' && <Products />}
+        {tab === 'bestsellers' && <BestSellers />}
         {tab === 'orders' && <Orders />}
         {tab === 'reviews' && <Reviews />}
         {tab === 'messages' && <Messages />}
@@ -340,6 +342,18 @@ function Products() {
   const { data: products, loading, error, refresh } = useLoad(() => adminService.getProducts())
   const [editing, setEditing] = useState(null)
   const [flash, setFlash] = useState('')
+  const [query, setQuery] = useState('')
+
+  const filtered = (products || []).filter((p) => {
+    if (!query.trim()) return true
+    const q = query.trim().toLowerCase()
+    const cat = CATEGORIES.find((c) => c.id === p.category)?.name || ''
+    return (
+      (p.name || '').toLowerCase().includes(q) ||
+      cat.toLowerCase().includes(q) ||
+      (p.id || '').toLowerCase().includes(q)
+    )
+  })
 
   function notify(msg) {
     setFlash(msg)
@@ -381,6 +395,15 @@ function Products() {
 
       <Flash msg={flash} />
       <ErrorBox error={error} />
+      <div className="card mb">
+        <input
+          placeholder="ابحث باسم المنتج أو القسم…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{ width: '100%', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 14px', fontSize: 14 }}
+        />
+        <div className="muted mt">{filtered.length} منتج من أصل {products?.length || 0}</div>
+      </div>
       {editing && (
         <ProductForm
           key={editing.id || 'new'}
@@ -399,7 +422,7 @@ function Products() {
               <tr><th>الصورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>القديم</th><th>الخصم</th><th>المخزون</th><th>شارة</th><th></th></tr>
             </thead>
             <tbody>
-              {(products || []).map((p) => {
+              {(filtered || []).map((p) => {
                 const cat = CATEGORIES.find((c) => c.id === p.category)
                 const disc = calculateDiscount(p.price, p.oldPrice)
                 return (
@@ -514,9 +537,55 @@ function ProductForm({ product, onSave, onCancel }) {
   )
 }
 
+function BestSellers() {
+  const { data: sellers, loading, error } = useLoad(() => adminService.getTopSellers(100))
+
+  return (
+    <>
+      <h1>الأكثر مبيعاً</h1>
+      <p className="sub">
+        ترتيب المنتجات حسب عدد الكميات المباعة من الطلبات المسجلة — بيغذي قسم «الأكثر مبيعاً» في الموقع تلقائياً
+      </p>
+      <ErrorBox error={error} />
+      <div className="card">
+        {loading ? (
+          <Loading />
+        ) : !sellers || sellers.length === 0 ? (
+          <div className="empty">لا توجد مبيعات مسجلة بعد — سجّل أول عملية شراء من تبويب الطلبات</div>
+        ) : (
+          <table>
+            <thead>
+              <tr><th>#</th><th>المنتج</th><th>الكمية المباعة</th><th>الإجمالي</th></tr>
+            </thead>
+            <tbody>
+              {sellers.map((s, i) => (
+                <tr key={s.product_id || i}>
+                  <td className="bold">#{i + 1}</td>
+                  <td className="bold">{s.product_name}</td>
+                  <td>{s.qty} قطعة</td>
+                  <td className="bold">{formatPrice(s.total)} ج.م</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  )
+}
+
 function Orders() {
   const { data: orders, loading, error, refresh } = useLoad(() => adminService.getOrders())
+  const { data: products } = useLoad(() => adminService.getProducts())
   const [savingId, setSavingId] = useState('')
+  const [flash, setFlash] = useState('')
+  const [showPurchase, setShowPurchase] = useState(false)
+
+  function notify(msg) {
+    setFlash(msg)
+    clearTimeout(window.__adminOrdersFlashTimer)
+    window.__adminOrdersFlashTimer = setTimeout(() => setFlash(''), 4000)
+  }
 
   async function setStatus(order, status) {
     setSavingId(order.id)
@@ -525,18 +594,40 @@ function Orders() {
       if (status === 'تم التسليم' && !order.completed_at) patch.completed_at = new Date().toISOString()
       await adminService.updateOrder(order.id, patch)
       await refresh()
+      notify('تم تحديث حالة الطلب ✓')
     } catch (e) {
-      alert('تعذر التحديث: ' + e.message)
+      notify('تعذر التحديث: ' + e.message)
     } finally {
       setSavingId('')
     }
   }
 
+  async function recordPurchase(order) {
+    try {
+      await adminService.createOrder(order)
+      await adminService.addActivity('purchase', `طلب مسجل من اللوحة ${order.id} — ${order.name} — ${formatPrice(order.total)} ج.م`)
+      setShowPurchase(false)
+      await refresh()
+      notify('تم تسجيل عملية الشراء وظهرت في الأكثر مبيعاً ✓')
+    } catch (e) {
+      notify('تعذر التسجيل: ' + e.message)
+    }
+  }
+
   return (
     <>
-      <h1>الطلبات</h1>
-      <p className="sub">تابع الطلبات وغيّر حالتها — تُسجَّل الطلبات هنا لحظة إرسال العميل</p>
+      <div className="space mb">
+        <div>
+          <h1>الطلبات</h1>
+          <p className="sub">تابع الطلبات وغيّر حالتها — تُسجَّل الطلبات هنا لحظة إرسال العميل</p>
+        </div>
+        <button className="btn primary" onClick={() => setShowPurchase(true)}>+ تسجيل شراء جديد</button>
+      </div>
+      <Flash msg={flash} />
       <ErrorBox error={error} />
+      {showPurchase && (
+        <PurchaseForm products={products || []} onSave={recordPurchase} onCancel={() => setShowPurchase(false)} />
+      )}
       <div className="card">
         {loading ? (
           <Loading />
@@ -581,6 +672,95 @@ function Orders() {
         )}
       </div>
     </>
+  )
+}
+
+function PurchaseForm({ products, onSave, onCancel }) {
+  const [productId, setProductId] = useState('')
+  const [qty, setQty] = useState(1)
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [payment, setPayment] = useState('cod')
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const chosen = products.find((p) => p.id === productId)
+  const total = chosen ? Number(chosen.price || 0) * Number(qty || 0) : 0
+
+  async function submit(e) {
+    e.preventDefault()
+    if (!chosen) return
+    if (!name.trim()) return
+    setBusy(true)
+    try {
+      await onSave({
+        id: `VNL-${Date.now().toString().slice(-6)}`,
+        name: name.trim(),
+        phone: phone.trim() || null,
+        payment_method: payment,
+        items: [{ id: chosen.id, name: chosen.name, price: Number(chosen.price), quantity: Number(qty) }],
+        total,
+        note: note.trim() || null,
+        status: 'جديد',
+      })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="card" onSubmit={submit}>
+      <div className="space mb">
+        <h2>تسجيل عملية شراء جديدة</h2>
+        <button type="button" className="btn small" onClick={onCancel}>إلغاء</button>
+      </div>
+      <div className="grid2">
+        <div className="field">
+          <label>المنتج (اكتب للبحث)</label>
+          <input list="admin-products" value={productId} onChange={(e) => setProductId(e.target.value)} placeholder="ابحث واختر المنتج…" required />
+          <datalist id="admin-products">
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>{p.name} — {formatPrice(p.price)} ج.م</option>
+            ))}
+          </datalist>
+          {chosen && <div className="muted mt">مُختار: {chosen.name} ({formatPrice(chosen.price)} ج.م)</div>}
+        </div>
+        <div className="field">
+          <label>الكمية</label>
+          <input type="number" min="1" value={qty} onChange={(e) => setQty(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>اسم العميل</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} required />
+        </div>
+        <div className="field">
+          <label>جوال العميل</label>
+          <input dir="ltr" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>طريقة الدفع</label>
+          <select value={payment} onChange={(e) => setPayment(e.target.value)}>
+            <option value="cod">عند الاستلام</option>
+            <option value="instapay">انستا باي</option>
+            <option value="vodafone">فودافون كاش</option>
+          </select>
+        </div>
+        <div className="field">
+          <label>الإجمالي</label>
+          <div className="bold" style={{ padding: '9px 0', fontSize: 18 }}>{formatPrice(total)} ج.م</div>
+        </div>
+      </div>
+      <div className="field">
+        <label>ملاحظات (اختياري)</label>
+        <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+      </div>
+      <div className="row">
+        <button className="btn primary" disabled={busy || !chosen || !name.trim()}>
+          {busy ? 'جارٍ التسجيل…' : 'حفظ عملية الشراء'}
+        </button>
+        <button type="button" className="btn" onClick={onCancel}>إلغاء</button>
+      </div>
+    </form>
   )
 }
 

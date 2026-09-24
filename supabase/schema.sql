@@ -158,3 +158,31 @@ grant insert on table public.messages to anon, authenticated;
 grant select, update, delete on table public.messages to authenticated;
 
 create index if not exists messages_created_at_idx on public.messages (created_at desc);
+
+-- ============================================================
+-- الأكثر مبيعاً (top_sellers) — دالة آمنة لقراءة الزائر
+-- بتحسب الكميات والإيرادات من الطلبات، والأونر بايبا عن RLS
+-- ============================================================
+create or replace function public.top_sellers(max_count int default 8)
+returns table (
+  product_id text,
+  product_name text,
+  qty bigint,
+  total numeric
+)
+language sql security definer stable as $$
+  select
+    items->>'id' as product_id,
+    items->>'name' as product_name,
+    sum((items->>'quantity')::int)::bigint as qty,
+    sum((items->>'quantity')::int * coalesce((items->>'price')::numeric, 0)) as total
+  from public.orders,
+  lateral jsonb_array_elements(coalesce(items, '[]'::jsonb)) as items
+  where status is distinct from 'ملغي'
+  group by items->>'id', items->>'name'
+  order by qty desc
+  limit max_count;
+$$;
+
+revoke all on function public.top_sellers(int) from public;
+grant execute on function public.top_sellers(int) to anon, authenticated;
