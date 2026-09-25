@@ -46,7 +46,7 @@ for (let i = 0; i < editableCount; i++) {
   // امسح أي قيمة مسرّبة (خصوصاً خانة الاسم) عشان نختبر الإجبار
   await el.fill('')
 }
-const submit = page.locator('button:has-text("أكمل الطلب"), button:has-text("إتمام الطلب"), button:has-text("تأكيد"), button:has-text("اطلب")')
+const submit = page.locator('button:has-text("إرسال الطلب عبر واتساب")')
 const btnCount = await submit.count()
 console.log('2) زرار الإتمام موجود؟', btnCount > 0 ? 'نعم ✅' : 'لا ❌')
 if (btnCount > 0) {
