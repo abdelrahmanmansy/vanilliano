@@ -18,6 +18,7 @@ import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../utils/format'
 import instapayQr from '../assets/instapay-qr.jpg'
+import vodafoneQr from '../assets/vodafone-qr.jpg'
 import { validateCoupon } from '../data/coupons'
 import {
   SHIPPING_COST,
@@ -643,6 +644,22 @@ export default function Checkout() {
                 </p>
                 <p className="text-[11px] text-burgundy-900/50">
                   أو حوّل على: {PAYMENT.instapayDisplay}
+                </p>
+              </div>
+            )}
+
+            {payment === 'vodafone' && (
+              <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-vanilla-100 bg-cream-50 p-4 text-center">
+                <img
+                  src={vodafoneQr}
+                  alt="كود QR لفودافون كاش"
+                  className="h-44 w-44 rounded-2xl bg-white object-contain p-2 shadow-sm"
+                />
+                <p className="text-xs font-black text-burgundy-950">
+                  امسح الكود بالتطبيق لتحويل المبلغ مباشرة
+                </p>
+                <p className="text-[11px] text-burgundy-900/50">
+                  أو حوّل على: {PAYMENT.vodafoneCashDisplay}
                 </p>
               </div>
             )}
