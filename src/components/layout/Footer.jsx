@@ -242,7 +242,7 @@ export default function Footer() {
             محفوظة
           </p>
           <p className="mt-2 text-xs font-black text-vanilla-300">
-            تصميم وتطوير Abdelrahman mansy
+            تصميم وتطوير Abdelrahman Mansy
           </p>
         </div>
       </div>
