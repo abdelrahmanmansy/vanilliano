@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fdf6f0" />
+      <stop offset="55%" stop-color="#f3d8ab" />
+      <stop offset="100%" stop-color="rgb(186,119,43)" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)" />
+  <circle cx="485.7213011345504" cy="345.5899786745145" r="46.834807798571354" fill="#ffffff" opacity="0.18294078440157852" /><circle cx="138.3123821340773" cy="128.0735569739253" r="21.967947161479216" fill="#ffffff" opacity="0.16869051252337694" /><circle cx="725.2079132924563" cy="280.6179169777239" r="40.497599088886325" fill="#ffffff" opacity="0.22037179173075339" /><circle cx="422.6938491277516" cy="37.49277853364311" r="26.77664746270822" fill="#ffffff" opacity="0.20417555556695519" /><circle cx="57.32511396417939" cy="395.8433310547634" r="48.815218108838074" fill="#ffffff" opacity="0.27183163104604124" /><circle cx="420.0866734346031" cy="449.3917778975742" r="47.1594663560921" fill="#ffffff" opacity="0.22769795871718573" /><circle cx="537.9253760721576" cy="420.43727336670764" r="34.06543450057093" fill="#ffffff" opacity="0.16064069437933756" /><circle cx="235.07193164202388" cy="242.32858855702696" r="46.16802294255936" fill="#ffffff" opacity="0.14725917435918884" />
+  <circle cx="400" cy="230" r="130" fill="#ffffff" opacity="0.25" />
+  <circle cx="400" cy="230" r="96" fill="#ffffff" opacity="0.35" />
+  <ellipse cx="400" cy="230" rx="72" ry="52" fill="rgb(252,161,59)" opacity="0.85" />
+  <rect x="340" y="176" width="120" height="16" rx="8" fill="#ffffff" opacity="0.8" transform="rotate(-18 400 230)" />
+  <rect x="400" y="230" width="150" height="20" rx="10" fill="#ffffff" opacity="0.9" transform="rotate(18 475 240)" />
+  <rect width="800" height="180" y="320" fill="url(#shine)" />
+  <text x="400" y="395" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="34" font-weight="700" fill="#3c2a20" textLength="560" lengthAdjust="spacingAndGlyphs">طقم إكسسوارات التصوير - 20 قطعة</text>
+  <text x="400" y="445" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="20" font-weight="500" fill="#6c4a33" opacity="0.8">Vanilliano</text>
+  <text x="400" y="60" text-anchor="middle" font-family="Cairo, Arial, sans-serif" font-size="16" fill="#6c4a33" opacity="0.5" letter-spacing="4">vanilliano.com</text>
+</svg>
