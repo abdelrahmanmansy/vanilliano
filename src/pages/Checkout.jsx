@@ -84,7 +84,7 @@ export default function Checkout() {
   const [payment, setPayment] = useState('instapay')
   const [deliveryMethod, setDeliveryMethod] = useState('delivery')
   const [form, setForm] = useState({
-    name: user?.name || '',
+    name: '',
     email: user?.email || '',
     phone: '',
     city: '',
@@ -126,7 +126,7 @@ export default function Checkout() {
 
   const validate = () => {
     const next = {}
-    if (form.name.trim().length < 3) next.name = 'يرجى إدخال الاسم الكامل'
+    if (form.name.trim().length < 3) next.name = 'يرجى إدخال اسمك الكامل لتتمكن من إتمام الطلب'
     if (!form.email.trim() || !EMAIL_REGEX.test(form.email))
       next.email = form.email.trim() ? 'بريد إلكتروني غير صحيح' : 'يرجى إدخال البريد الإلكتروني لنتواصل معك'
     if (!PHONE_REGEX.test(form.phone)) next.phone = 'رقم جوال غير صحيح'
@@ -238,7 +238,7 @@ export default function Checkout() {
     return order
   }
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = (viaWhatsApp = true) => {
     const next = validate()
     setErrors(next)
     if (Object.keys(next).length > 0) {
@@ -250,10 +250,14 @@ export default function Checkout() {
     setPlacing(true)
     setTimeout(() => {
       clearCart()
-      window.open(WHATSAPP_LINK(message), '_blank')
+      if (viaWhatsApp) window.open(WHATSAPP_LINK(message), '_blank')
       setPlacing(false)
-      setPlacedOrder({ ...order, message })
-      toast.success('جهّزنا طلبك على الواتساب! ما عليك إلا إرسال الرسالة 💚')
+      setPlacedOrder({ ...order, message, viaWhatsApp })
+      toast.success(
+        viaWhatsApp
+          ? 'جهّزنا طلبك على الواتساب! أرسل الرسالة لتأكيد الطلب 💚'
+          : 'تم استلام طلبك في الموقع! سنتواصل معك لتأكيده ✅',
+      )
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }, 900)
   }
