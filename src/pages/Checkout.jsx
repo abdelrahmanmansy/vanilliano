@@ -85,7 +85,7 @@ export default function Checkout() {
   const [deliveryMethod, setDeliveryMethod] = useState('delivery')
   const [form, setForm] = useState({
     name: '',
-    email: user?.email || '',
+    email: '',
     phone: '',
     city: '',
     address: '',
