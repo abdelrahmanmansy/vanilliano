@@ -241,6 +241,9 @@ export default function Footer() {
             © {new Date().getFullYear()} فانيليانو Vanilliano - جميع الحقوق
             محفوظة
           </p>
+          <p className="mt-2 text-xs font-black text-vanilla-300">
+            تطوير وتصميم: المهندس عبد الرحمن منسي ABDELRAHMAN MANSY
+          </p>
         </div>
       </div>
     </footer>
