@@ -18,6 +18,41 @@ const findAllLocal = () => {
 
 const findLocalById = (id) => findAllLocal().find((o) => o.id === id)
 
+const omKey = (orderId) => `vanilliano_om_${orderId}`
+
+const readLocalChat = (orderId) => {
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(omKey(orderId)) || '[]')
+    return Array.isArray(raw) ? raw : []
+  } catch {
+    return []
+  }
+}
+
+const writeLocalChat = (orderId, list) => {
+  try {
+    window.localStorage.setItem(omKey(orderId), JSON.stringify(list))
+  } catch {
+    /* ignore */
+  }
+}
+
+const byDate = (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
+
+const mergeChat = (...groups) => {
+  const seen = new Set()
+  const out = []
+  for (const g of groups) {
+    for (const m of g || []) {
+      if (m && !seen.has(m.id)) {
+        seen.add(m.id)
+        out.push(m)
+      }
+    }
+  }
+  return out.sort(byDate)
+}
+
 const MILESTONES = [
   { label: 'تم استلام الطلب', emoji: '📦' },
   { label: 'تم استلام الدفعة', emoji: '💸' },
@@ -97,6 +132,44 @@ export default function Track() {
   const [loading, setLoading] = useState(false)
   const [order, setOrder] = useState(null)
   const [notFound, setNotFound] = useState(false)
+  const [chat, setChat] = useState([])
+  const [chatText, setChatText] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
+  const [sending, setSending] = useState(false)
+
+  const loadChat = async (id) => {
+    setChatLoading(true)
+    const local = readLocalChat(id)
+    const { data } = await supabaseService.getOrderMessages(id)
+    const merged = mergeChat(local, data)
+    writeLocalChat(id, merged)
+    setChat(merged)
+    setChatLoading(false)
+  }
+
+  const sendChat = async () => {
+    const body = chatText.trim()
+    if (!body || !order) return
+    setSending(true)
+    const localMsg = {
+      id: 'local-' + Date.now(),
+      order_id: order.id,
+      sender: 'customer',
+      body,
+      seen: false,
+      created_at: new Date().toISOString(),
+    }
+    writeLocalChat(order.id, mergeChat(readLocalChat(order.id), [localMsg]))
+    setChat(mergeChat(chat, [localMsg]))
+    setChatText('')
+    const { data, error } = await supabaseService.saveOrderMessage(order.id, 'customer', body)
+    if (!error) {
+      const merged = mergeChat(readLocalChat(order.id), data)
+      writeLocalChat(order.id, merged)
+      setChat(merged)
+    }
+    setSending(false)
+  }
 
   const load = async (rawId) => {
     const id = String(rawId || '').trim()
@@ -121,6 +194,7 @@ export default function Track() {
     setLoading(false)
     if (found) {
       setOrder(found)
+      loadChat(id)
     } else {
       setNotFound(true)
     }
@@ -258,6 +332,68 @@ export default function Track() {
             <p className="rounded-2xl bg-emerald-50 p-4 text-center text-sm font-black text-emerald-700">
               {friendlyStatus(order.status)}
             </p>
+
+            <div className="rounded-2xl border border-vanilla-100 bg-white p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-lg">💬</span>
+                <div>
+                  <p className="text-sm font-black text-burgundy-950">كلم صاحب المتجر</p>
+                  <p className="text-[11px] text-burgundy-900/40">
+                    رسايلك بتوصل له في الداشبورد فوراً، وردّه يظهر هنا مباشرة
+                  </p>
+                </div>
+              </div>
+              <div className="mb-3 max-h-64 space-y-2 overflow-y-auto">
+                {chatLoading ? (
+                  <p className="text-center text-xs font-bold text-burgundy-900/35">جارِ تحميل المحادثة…</p>
+                ) : chat.length === 0 ? (
+                  <p className="text-center text-xs font-bold text-burgundy-900/35">
+                    مفيش رسايل بعد — اسأل أي حاجة عن طلبك
+                  </p>
+                ) : (
+                  chat.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`flex ${m.sender === 'merchant' ? 'justify-start' : 'justify-end'}`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                          m.sender === 'merchant'
+                            ? 'bg-vanilla-100 text-burgundy-950'
+                            : 'bg-emerald-100 text-emerald-900'
+                        }`}
+                      >
+                        <p className="text-[10px] font-black opacity-60">
+                          {m.sender === 'merchant' ? '🏪 فانيليانو' : 'أنت'}
+                        </p>
+                        <p className="whitespace-pre-wrap font-bold">{m.body}</p>
+                        <p className="mt-1 text-[10px] opacity-50">
+                          {formatDate(m.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  sendChat()
+                }}
+                className="flex gap-2"
+              >
+                <textarea
+                  value={chatText}
+                  onChange={(e) => setChatText(e.target.value)}
+                  placeholder="اكتب رسالتك…"
+                  rows={2}
+                  className="w-full rounded-2xl border border-vanilla-200 bg-cream-50 px-4 py-2 text-sm font-bold text-burgundy-950 outline-none transition-colors focus:border-burgundy-400"
+                />
+                <Button type="submit" size="lg" variant="dark" loading={sending}>
+                  {sending ? '...' : 'إرسال'}
+                </Button>
+              </form>
+            </div>
 
             <div>
               <p className="mb-3 text-sm font-black text-burgundy-950">تفاصيل الطلب</p>

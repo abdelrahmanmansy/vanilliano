@@ -109,4 +109,20 @@ export const supabaseService = {
     })
     return { data, error }
   },
+
+  async saveOrderMessage(orderId, sender, body) {
+    if (!client || !orderId || !body) return { data: null, error: { message: 'Supabase غير مهيأ' } }
+    const { data, error } = await client.from('order_messages').insert({
+      order_id: String(orderId),
+      sender,
+      body,
+    })
+    return { data, error }
+  },
+
+  async getOrderMessages(orderId) {
+    if (!client || !orderId) return { data: [], error: { message: 'Supabase غير مهيأ' } }
+    const { data, error } = await client.rpc('order_messages_for', { p_order_id: String(orderId) })
+    return { data: data || [], error }
+  },
 }

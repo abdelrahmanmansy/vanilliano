@@ -107,6 +107,14 @@ td img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
   font-size: 13px; cursor: pointer; opacity: 0.55;
 }
 .copy-link:hover { opacity: 1; }
+.msg-badge {
+  display: inline-block; margin: 0 6px;
+  background: #fef3c7; color: #92400e;
+  border: 1px solid #fcd34d; border-radius: 999px;
+  padding: 1px 8px; font-size: 11px; font-weight: 700;
+  box-shadow: 0 0 0 3px rgba(252, 211, 77, 0.25);
+  animation: flashRow 2.4s ease infinite;
+}
 .oc-head {
   display: flex; justify-content: space-between; align-items: center;
   gap: 10px; flex-wrap: wrap; margin-bottom: 16px;

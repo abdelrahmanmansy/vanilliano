@@ -38,6 +38,12 @@ const fmtDate = (iso) => {
   })
 }
 
+const deliveryChatMsg = (name) =>
+  `وصل طلبك بالسلامة يا ${name} 💛\n` +
+  `طلبك وصل بمواعيده وكله تمام. 🧁🎈\n` +
+  `نشكرك من القلب على ثقتك في فانيليانو، ونتمنى أن يحوز طلبك على كامل رضاك.\n` +
+  `شكراً لذوقك الغالي، وبنستناك في كل طلب… لأن أحلى التجارب بتتكرر دايماً مع فانيليانو 💛`
+
 const assetURL = (src) => {
   if (!src || typeof src !== 'string') return src
   const base = import.meta.env.BASE_URL || '/'
@@ -622,9 +628,24 @@ function Orders({ highlightId }) {
   const [flash, setFlash] = useState('')
   const [showPurchase, setShowPurchase] = useState(false)
   const [selectedId, setSelectedId] = useState('')
+  const [msgCounts, setMsgCounts] = useState({})
+
+  async function loadMsgCounts() {
+    try {
+      const rows = (await adminService.getAllOrderMessages()) || []
+      const map = {}
+      for (const m of rows) {
+        if (m.sender === 'customer' && !m.seen) map[m.order_id] = (map[m.order_id] || 0) + 1
+      }
+      setMsgCounts(map)
+    } catch {
+      /* ignore */
+    }
+  }
 
   useEffect(() => {
     if (highlightId) setSelectedId(highlightId)
+    loadMsgCounts()
   }, [highlightId])
 
   const selected = selectedId ? (orders || []).find((o) => o.id === selectedId) || null : null
@@ -654,6 +675,13 @@ function notify(msg) {
       const patch = { status }
       if (status === 'تم التسليم' && !order.completed_at) patch.completed_at = new Date().toISOString()
       await adminService.updateOrder(order.id, patch)
+      if (status === 'تم التسليم') {
+        try {
+          await adminService.addOrderMessage(order.id, 'merchant', deliveryChatMsg(order.name || 'حبيبنا'))
+        } catch {
+          /* الشات بيتفتعل لما الدالة تتحط */
+        }
+      }
       await refresh()
       notify('تم تحديث حالة الطلب ✓')
     } catch (e) {
@@ -704,6 +732,7 @@ function notify(msg) {
             onStatus={setStatus}
             onBack={() => setSelectedId('')}
             onCopy={copyOrderLink}
+            onMessagesChanged={loadMsgCounts}
           />
         ) : (orders || []).length === 0 ? (
           <div className="empty">لا توجد طلبات بعد</div>
@@ -719,6 +748,11 @@ function notify(msg) {
                     <button className="btn-link" onClick={() => setSelectedId(o.id)}>
                       {o.id}
                     </button>
+                    {msgCounts[o.id] > 0 && (
+                      <span className="msg-badge" title={`${msgCounts[o.id]} رسالة جديدة من العميل`}>
+                        💬 {msgCounts[o.id]}
+                      </span>
+                    )}
                     <button
                       className="copy-link"
                       onClick={() => copyOrderLink(o.id)}
@@ -780,7 +814,46 @@ function notify(msg) {
   )
 }
 
-function OrderCard({ order, savingId, onStatus, onBack, onCopy }) {
+function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChanged }) {
+  const [msgs, setMsgs] = useState([])
+  const [msgText, setMsgText] = useState('')
+  const [msgBusy, setMsgBusy] = useState(false)
+  const [msgLoading, setMsgLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setMsgLoading(true)
+    setMsgs([])
+    adminService
+      .listOrderMessages(order.id)
+      .then((rows) => {
+        if (cancelled) return
+        setMsgs(rows || [])
+        const hadUnseen = (rows || []).some((m) => m.sender === 'customer' && !m.seen)
+        if (hadUnseen) {
+          adminService.markOrderMessagesSeen(order.id).finally(() => onMessagesChanged && onMessagesChanged())
+        }
+      })
+      .catch(() => { if (!cancelled) setMsgs([]) })
+      .finally(() => { if (!cancelled) setMsgLoading(false) })
+    return () => { cancelled = true }
+  }, [order.id])
+
+  async function sendMsg() {
+    const body = msgText.trim()
+    if (!body) return
+    setMsgBusy(true)
+    try {
+      const row = await adminService.addOrderMessage(order.id, 'merchant', body)
+      setMsgs((prev) => [...prev, ...(row || [])])
+      setMsgText('')
+    } catch (e) {
+      alert('تعذر إرسال الرسالة: ' + e.message)
+    } finally {
+      setMsgBusy(false)
+    }
+  }
+
   const payLabel = (m) =>
     m === 'cod' ? 'عند الاستلام' : m === 'instapay' ? 'انستا باي' : m === 'vodafone' ? 'فودافون كاش' : m || '—'
   const items = Array.isArray(order.items) ? order.items : []
@@ -848,6 +921,56 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy }) {
             }}
           />
         )}
+
+        <div style={{ marginTop: 18, borderTop: '1px solid #f3e8ff', paddingTop: 14 }}>
+          <h3 className="oc-sub">💬 محادثة الطلب</h3>
+          <p className="muted" style={{ fontSize: 12 }}>
+            العميل بيشوف الرسايل دي جوه صفحة «تتبع طلبك» على الموقع فوراً — اكتب أي توضيح أو رد مقابل.
+          </p>
+          <div className="chat-box" style={{ maxHeight: 240, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {msgLoading ? (
+              <p className="muted">جارِ تحميل المحادثة…</p>
+            ) : msgs.length === 0 ? (
+              <p className="muted">مفيش رسايل بعد — أول رسالة من العميل هتظهر هنا وفي التتبع.</p>
+            ) : (
+              msgs.map((m) => (
+                <div
+                  key={m.id}
+                  style={{ display: 'flex', justifyContent: m.sender === 'merchant' ? 'flex-start' : 'flex-end' }}
+                >
+                  <div
+                    style={{
+                      maxWidth: '85%',
+                      background: m.sender === 'merchant' ? '#fef3c7' : '#e0f2fe',
+                      border: '1px solid ' + (m.sender === 'merchant' ? '#fde68a' : '#bae6fd'),
+                      borderRadius: 12,
+                      padding: '8px 12px',
+                      whiteSpace: 'pre-wrap',
+                      fontSize: 13,
+                    }}
+                  >
+                    <b style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>
+                      {m.sender === 'merchant' ? '🏪 فانيليانو' : '🧑‍🤝‍🧑 العميل'}
+                    </b>
+                    {m.body}
+                    <span className="muted" style={{ display: 'block', fontSize: 10, marginTop: 4 }}>{fmtDate(m.created_at)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="row" style={{ gap: 8, marginTop: 10, alignItems: 'flex-start' }}>
+            <textarea
+              value={msgText}
+              onChange={(e) => setMsgText(e.target.value)}
+              placeholder="اكتب رد… هيظهر للعميل فوراً في صفحة تتبع طلبه"
+              style={{ flex: 1, minHeight: 56, padding: 8, borderRadius: 8, border: '1px solid #d8b4fe' }}
+            />
+            <button className="btn primary" onClick={sendMsg} disabled={msgBusy}>
+              إرسال 🚀
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )

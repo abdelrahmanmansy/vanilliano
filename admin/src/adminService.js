@@ -72,4 +72,42 @@ export const adminService = {
   getActivity() {
     return run(client.from('activity').select('*').order('created_at', { ascending: false }).limit(200))
   },
+
+  listOrderMessages(orderId) {
+    return run(
+      client
+        .from('order_messages')
+        .select('*')
+        .eq('order_id', String(orderId))
+        .order('created_at', { ascending: true }),
+    )
+  },
+
+  getAllOrderMessages() {
+    return run(
+      client
+        .from('order_messages')
+        .select('*')
+        .order('created_at', { ascending: false }),
+    )
+  },
+
+  addOrderMessage(orderId, sender, body) {
+    return run(
+      client
+        .from('order_messages')
+        .insert({ order_id: String(orderId), sender, body })
+        .select('*'),
+    )
+  },
+
+  markOrderMessagesSeen(orderId) {
+    return run(
+      client
+        .from('order_messages')
+        .update({ seen: true })
+        .eq('order_id', String(orderId))
+        .eq('sender', 'customer'),
+    )
+  },
 }
