@@ -155,6 +155,12 @@ function Login({ onLogin }) {
 
 function Shell({ user, onLogout }) {
   const [tab, setTab] = useState('overview')
+  const [highlightId, setHighlightId] = useState('')
+
+  const openOrder = (id) => {
+    setHighlightId(id)
+    setTab('orders')
+  }
 
   const tabs = [
     { id: 'overview', label: 'نظرة عامة', icon: '📊' },
@@ -187,10 +193,10 @@ function Shell({ user, onLogout }) {
       </aside>
 
       <main className="main">
-        {tab === 'overview' && <Overview />}
+        {tab === 'overview' && <Overview onOpenOrder={openOrder} />}
         {tab === 'products' && <Products />}
         {tab === 'bestsellers' && <BestSellers />}
-        {tab === 'orders' && <Orders />}
+        {tab === 'orders' && <Orders highlightId={highlightId} />}
         {tab === 'reviews' && <Reviews />}
         {tab === 'messages' && <Messages />}
         {tab === 'activity' && <Activity />}
@@ -233,7 +239,7 @@ function ErrorBox({ error }) {
   return <div className="err" style={{ color: 'var(--red)' }}>{error}</div>
 }
 
-function Overview() {
+function Overview({ onOpenOrder }) {
   const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
   const [reviews, setReviews] = useState([])
@@ -297,7 +303,11 @@ function Overview() {
             <tbody>
               {orders.slice(0, 6).map((o) => (
                 <tr key={o.id}>
-                  <td className="bold">{o.id}</td>
+                  <td className="bold">
+                    <button className="btn-link" onClick={() => onOpenOrder?.(o.id)}>
+                      {o.id}
+                    </button>
+                  </td>
                   <td>{o.name}</td>
                   <td dir="ltr">
                     <a
@@ -597,7 +607,7 @@ function BestSellers() {
   )
 }
 
-function Orders() {
+function Orders({ highlightId }) {
   const { data: orders, loading, error, refresh } = useLoad(() => adminService.getOrders())
   const { data: products } = useLoad(() => adminService.getProducts())
   const [savingId, setSavingId] = useState('')
@@ -675,7 +685,19 @@ function Orders() {
             </thead>
             <tbody>
               {(orders || []).map((o) => (
-                <tr key={o.id}>
+                <tr
+                  key={o.id}
+                  id={`order-${o.id}`}
+                  ref={(el) => {
+                    if (el && highlightId === o.id) {
+                      setTimeout(() => {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        el.classList.add('flash-row')
+                        setTimeout(() => el.classList.remove('flash-row'), 2400)
+                      }, 250)
+                    }
+                  }}
+                >
                   <td className="bold">{o.id}</td>
                   <td>{o.name}
                     {o.note?.includes('خصم أول طلب') && (
