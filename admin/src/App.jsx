@@ -865,6 +865,9 @@ function DeliveryNotify({ order, onCopy }) {
     `شكراً لذوقك الغالي، وبنستناك في كل طلب… لأن أحلى التجارب بتتكرر دايماً مع فانيليانو 🧁\n` +
     `- فانيليانو`
   const subject = `طلبك ${order.id} وصل يا ${name} — تسلملي ذوقك 💛`
+  const mail = order.email
+    ? `mailto:${order.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`
+    : null
 
   return (
     <div className="notice">
