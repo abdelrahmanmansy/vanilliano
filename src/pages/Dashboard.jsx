@@ -30,6 +30,17 @@ const tabs = [
 
 const DEMO_IDS = new Set(['VNL-991234', 'VNL-997643'])
 
+const STATUS_TEXT = {
+  'جديد': 'قيد المراجعة 💙',
+  'بانتظار التأكيد': 'قيد المراجعة 💙',
+  'تم استلام الدفع': 'تم استلام الدفعة ✅',
+  'قيد التجهيز': 'بيتجهز حالياً 🎁',
+  'تم التسليم': 'تم التسليم 🎉',
+  'ملغي': 'ملغي',
+}
+
+const statusText = (s) => STATUS_TEXT[s] || s || '—'
+
 export default function Dashboard() {
   const { user, logout } = useAuth()
   const { products } = useProducts()
@@ -165,7 +176,7 @@ export default function Dashboard() {
                         <p className="text-sm font-black text-burgundy-900">
                           {formatPrice(o.total)} ج.م
                         </p>
-                        <Badge>{o.status}</Badge>
+                        <Badge>{statusText(o.status)}</Badge>
                       </div>
                     </li>
                   ))}
@@ -229,7 +240,7 @@ export default function Dashboard() {
                     <span className="text-lg font-black text-burgundy-900">
                       {formatPrice(o.total)} ج.م
                     </span>
-                    <Badge>{o.status}</Badge>
+                    <Badge>{statusText(o.status)}</Badge>
                   </div>
                 </div>
                 <ul className="space-y-2">
@@ -251,6 +262,11 @@ export default function Dashboard() {
                     </li>
                   ))}
                 </ul>
+                {o.status === 'تم استلام الدفع' && (
+                  <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-xs font-bold leading-relaxed text-emerald-700">
+                    🎉 شكراً لثقتك في فانيليانو! وصلتنا دفعتك وبدأنا تجهيز طلبك 🎁
+                  </p>
+                )}
                 {o.shippingInfo && (
                   <p className="mt-3 border-t border-vanilla-50 pt-3 text-[11px] text-burgundy-900/40">
                     📍 التوصيل إلى: {o.shippingInfo.name} · {o.shippingInfo.city || '—'} · {o.shippingInfo.address}

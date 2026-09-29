@@ -5,7 +5,7 @@ import { calculateDiscount, formatPrice } from '../../src/utils/format'
 
 const OWNER_EMAIL = 'abdelrahmanahmedmansy@gmail.com'
 
-const ORDER_STATUSES = ['جديد', 'قيد التجهيز', 'تم التسليم', 'ملغي']
+const ORDER_STATUSES = ['جديد', 'بانتظار التأكيد', 'تم استلام الدفع', 'قيد التجهيز', 'تم التسليم', 'ملغي']
 const STOCK_OPTIONS = [
   { value: 'in', label: 'متوفر' },
   { value: 'limited', label: 'الكمية محدودة' },
@@ -301,7 +301,7 @@ function Overview() {
                   <td>{o.name}</td>
                   <td dir="ltr">{o.phone}</td>
                   <td className="bold">{formatPrice(o.total)} ج.م</td>
-                  <td><span className={`badge ${o.status === 'تم التسليم' ? 'green' : o.status === 'ملغي' ? 'red' : 'gold'}`}>{o.status}</span></td>
+                  <td><span className={`badge ${o.status === 'تم التسليم' || o.status === 'تم استلام الدفع' ? 'green' : o.status === 'ملغي' ? 'red' : 'gold'}`}>{o.status}</span></td>
                   <td className="muted">{fmtDate(o.created_at)}</td>
                 </tr>
               ))}
@@ -689,7 +689,7 @@ function Orders() {
                   <td className="bold">{formatPrice(o.total)} ج.م</td>
                   <td>
                     <div className="row">
-                      <span className={`badge ${o.status === 'تم التسليم' ? 'green' : o.status === 'ملغي' ? 'red' : 'gold'}`}>{o.status}</span>
+                      <span className={`badge ${o.status === 'تم التسليم' || o.status === 'تم استلام الدفع' ? 'green' : o.status === 'ملغي' ? 'red' : 'gold'}`}>{o.status}</span>
                       <select value={o.status} disabled={savingId === o.id} onChange={(e) => setStatus(o, e.target.value)}>
                         {ORDER_STATUSES.map((s) => (
                           <option key={s} value={s}>{s}</option>
