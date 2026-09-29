@@ -299,7 +299,18 @@ function Overview() {
                 <tr key={o.id}>
                   <td className="bold">{o.id}</td>
                   <td>{o.name}</td>
-                  <td dir="ltr">{o.phone}</td>
+                  <td dir="ltr">
+                    <a
+                      href={`https://wa.me/2${String(o.phone || '').replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="افتح واتساب"
+                      style={{ color: 'inherit' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {o.phone}
+                    </a>
+                  </td>
                   <td className="bold">{formatPrice(o.total)} ج.م</td>
                   <td><span className={`badge ${o.status === 'تم التسليم' || o.status === 'تم استلام الدفع' ? 'green' : o.status === 'ملغي' ? 'red' : 'gold'}`}>{o.status}</span></td>
                   <td className="muted">{fmtDate(o.created_at)}</td>
@@ -671,7 +682,18 @@ function Orders() {
                       <div className="muted" style={{ fontSize: 11 }} title={o.note}>🎁 خصم أول طلب 26%</div>
                     )}
                   </td>
-                  <td dir="ltr">{o.phone}</td>
+                  <td dir="ltr">
+                    <a
+                      href={`https://wa.me/2${String(o.phone || '').replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="افتح واتساب"
+                      style={{ color: 'inherit' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {o.phone}
+                    </a>
+                  </td>
                   <td dir="ltr">
                     {o.email
                       ? <a href={`mailto:${o.email}`} title="راسل العميل" style={{ color: 'inherit' }}>{o.email}</a>
