@@ -164,7 +164,7 @@ export default function Dashboard() {
                 <>
                   {orders.slice(0, 4).some((o) => o.status === 'تم التسليم') && (
                     <p className="mb-3 rounded-2xl bg-emerald-50 p-3 text-center text-sm font-black text-emerald-700">
-                      🎉 طلبك وصل بالسلامة! نتمنى أن يحوز على كامل رضاك — وبانتظار تجربة مميزة جديدة معك 💛
+                      🎉 وصل طلبك بالسلامة! نشكرك من القلب على ثقتك في فانيليانو، ونتمنى أن يحوز طلبك على كامل رضاك 💛
                     </p>
                   )}
                   <ul className="space-y-3">
@@ -259,7 +259,7 @@ export default function Dashboard() {
                   </div>
                   {o.status === 'تم التسليم' && (
                     <p className="basis-full rounded-2xl bg-emerald-50 p-3 text-center text-sm font-black text-emerald-700">
-                      🎉 طلبك وصل بالسلامة! نتمنى أن يحوز على كامل رضاك — وبانتظار تجربة مميزة جديدة معك 💛
+                      🎉 وصل طلبك بالسلامة! نشكرك من القلب على ثقتك في فانيليانو، ونتمنى أن يحوز طلبك على كامل رضاك 💛
                     </p>
                   )}
                 </div>
