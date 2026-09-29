@@ -162,6 +162,14 @@ function Shell({ user, onLogout }) {
     setTab('orders')
   }
 
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('order')
+    if (q) {
+      setHighlightId(q)
+      setTab('orders')
+    }
+  }, [])
+
   const tabs = [
     { id: 'overview', label: 'نظرة عامة', icon: '📊' },
     { id: 'products', label: 'المنتجات', icon: '🧁' },
@@ -614,10 +622,16 @@ function Orders({ highlightId }) {
   const [flash, setFlash] = useState('')
   const [showPurchase, setShowPurchase] = useState(false)
 
-  function notify(msg) {
+function notify(msg) {
     setFlash(msg)
     clearTimeout(window.__adminOrdersFlashTimer)
-    window.__adminOrdersFlashTimer = setTimeout(() => setFlash(''), 4000)
+    window.__adminOrdersFlashTimer = setTimeout(() => setFlash(''), 3000)
+  }
+
+  function copyOrderLink(id) {
+    const url = `${window.location.origin}${window.location.pathname}?order=${id}`
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(url)
+    notify('نسخنا رابط الطلب — افتحه من موبايلك وهيوديك عليه فوراً')
   }
 
   useEffect(() => {
@@ -698,7 +712,16 @@ function Orders({ highlightId }) {
                     }
                   }}
                 >
-                  <td className="bold">{o.id}</td>
+                  <td className="bold">
+                    {o.id}
+                    <button
+                      className="copy-link"
+                      onClick={() => copyOrderLink(o.id)}
+                      title="نسخ رابط الطلب — افتحه من موبايلك وهيوديك عليه فوراً"
+                    >
+                      🔗
+                    </button>
+                  </td>
                   <td>{o.name}
                     {o.note?.includes('خصم أول طلب') && (
                       <div className="muted" style={{ fontSize: 11 }} title={o.note}>🎁 خصم أول طلب 26%</div>

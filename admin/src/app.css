@@ -102,6 +102,11 @@ td img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
   cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
 }
 .btn-link:hover { color: var(--brand); }
+.copy-link {
+  border: 0; background: none; padding: 0 0 0 6px;
+  font-size: 13px; cursor: pointer; opacity: 0.55;
+}
+.copy-link:hover { opacity: 1; }
 .flash-row { animation: flashRow 2.4s ease; }
 @keyframes flashRow { 0%, 60% { background: rgba(255, 214, 10, 0.35); } 100% { background: transparent; } }
 
