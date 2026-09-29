@@ -10,7 +10,7 @@ page.on('pageerror', (e) => pageErrors.push(e.message))
 
 // 1) الفوتر فيه رابط تتبع الطلب
 await page.goto(SITE, { waitUntil: 'domcontentloaded' })
-const footerTrack = await page.locator('a[href="/track"]').count()
+const footerTrack = await page.locator('a:has-text("تتبع طلبك")').count()
 console.log('1) رابط تتبع الطلب في الفوتر؟', footerTrack > 0 ? 'نعم ✅' : 'لا ❌')
 
 // 2) اطلب طلب و افتح التتبع من زرار شاشة النجاح
