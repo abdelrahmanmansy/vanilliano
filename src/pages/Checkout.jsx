@@ -402,7 +402,7 @@ export default function Checkout() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-xs font-black text-burgundy-900">
-                  الاسم الكامل *
+                  الاسم الثنائي *
                 </label>
                 <input
                   value={form.name}
