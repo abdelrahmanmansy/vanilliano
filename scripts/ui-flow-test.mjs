@@ -26,7 +26,7 @@ async function checkout({ viaWhatsApp, leaveEmailEmpty = false }) {
   const email = page.locator('input[type="email"]').first()
   await email.fill(leaveEmailEmpty ? '' : EMAIL)
   await page.fill('input[placeholder="01xxxxxxxxx"]', '01111846842')
-  await page.selectOption('select option[value="الهرم"]', 'الهرم').catch(() => {})
+  await page.selectOption('select', { label: 'الهرم' }).catch(() => {})
   // العنوان التفصيلي
   await page.fill('input[placeholder="الحي، الشارع، رقم المبنى"]', 'شارع اختبار 1')
 
@@ -39,7 +39,8 @@ async function checkout({ viaWhatsApp, leaveEmailEmpty = false }) {
   const ok = await page.locator('text=رقم الطلب').count()
   let orderId = ''
   try {
-    orderId = (await page.locator('span[dir="ltr"]').first().innerText()).trim()
+    const pText = await page.locator('p:has-text("رقم الطلب")').first().innerText()
+    orderId = (pText.match(/[A-Z]{2,4}-\d+/) || [''])[0]
   } catch {}
   return { ok, orderId }
 }
@@ -47,17 +48,17 @@ async function checkout({ viaWhatsApp, leaveEmailEmpty = false }) {
 console.log('--- المسار الأول: تأكيد مباشرة ---')
 const direct = await checkout({ viaWhatsApp: false })
 console.log('1) الطلب اتسجل وظهرت شاشة النجاح؟', direct.ok > 0 ? 'نعم ✅' : 'لا ❌')
-console.log('2) رقم طلب اتعمل؟', direct.orderId.startsWith('ORD') ? 'نعم ✅ (' + direct.orderId + ')' : 'لا ❌')
+console.log('2) رقم طلب اتعمل؟', /^[A-Z]{2,4}-\d+$/.test(direct.orderId) ? 'نعم ✅ (' + direct.orderId + ')' : 'لا ❌')
 
 console.log('--- المسار التاني: عبر واتساب ---')
 const wa = await checkout({ viaWhatsApp: true })
 console.log('3) الطلب اتسجل وظهرت شاشة النجاح؟', wa.ok > 0 ? 'نعم ✅' : 'لا ❌')
-console.log('4) رقم طلب اتعمل؟', wa.orderId.startsWith('ORD') ? 'نعم ✅ (' + wa.orderId + ')' : 'لا ❌')
+console.log('4) رقم طلب اتعمل؟', /^[A-Z]{2,4}-\d+$/.test(wa.orderId) ? 'نعم ✅ (' + wa.orderId + ')' : 'لا ❌')
 
 console.log('--- الإيميل اختياري (مش اجباري) ---')
 const noEmail = await checkout({ viaWhatsApp: false, leaveEmailEmpty: true })
 console.log('5) الطلب اتسجل من غير إيميل خالص؟', noEmail.ok > 0 ? 'نعم ✅' : 'لا ❌')
-console.log('6) رقم طلب اتعمل من غير إيميل؟', noEmail.orderId.startsWith('ORD') ? 'نعم ✅ (' + noEmail.orderId + ')' : 'لا ❌')
+console.log('6) رقم طلب اتعمل من غير إيميل؟', /^[A-Z]{2,4}-\d+$/.test(noEmail.orderId) ? 'نعم ✅ (' + noEmail.orderId + ')' : 'لا ❌')
 
 console.log('PAGEERRORS:', pageErrors.join(' || ') || '(none)')
 await browser.close()
