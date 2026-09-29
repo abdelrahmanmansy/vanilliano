@@ -855,6 +855,7 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy }) {
 
 function DeliveryNotify({ order, onCopy }) {
   const name = order.name || 'حبيبنا'
+  const wa = `https://wa.me/2${String(order.phone || '').replace(/\D/g, '')}`
   const link = `https://abdelrahmanmansy.github.io/vanilliano/track?order=${order.id}`
   const msg =
     `وصل طلبك بالسلامة يا ${name} 💛\n\n` +
