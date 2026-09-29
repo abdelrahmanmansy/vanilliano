@@ -7,12 +7,14 @@ import {
   Heart,
   ShoppingBag,
   User,
+  Bell,
   ChevronDown,
   Truck,
   BadgePercent,
   ShieldCheck,
   Gift,
 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import Logo from './Logo'
 import CartDrawer from './CartDrawer'
 import SearchOverlay from './SearchOverlay'
@@ -20,6 +22,7 @@ import { categories } from '../../data/categories'
 import { useCart } from '../../context/CartContext'
 import { useWishlist } from '../../context/WishlistContext'
 import { useAuth } from '../../context/AuthContext'
+import { supabaseService } from '../../services/supabase'
 
 const NAV_ROUTES = [
   { to: '/', label: 'الرئيسية' },
@@ -36,9 +39,36 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
+  const [bellOpen, setBellOpen] = useState(false)
+  const [delivered, setDelivered] = useState([])
   const { totalItems } = useCart()
   const { wishlist } = useWishlist()
   const { user } = useAuth()
+
+  const seenKey = 'vanilliano_seen_delivered'
+  const unseenCount = delivered.filter(
+    (o) => !((JSON.parse(window.localStorage.getItem(seenKey) || '[]') || []).includes(o.id)),
+  ).length
+
+  useEffect(() => {
+    const localList = (JSON.parse(window.localStorage.getItem('vanilliano_orders') || '[]') || [])
+      .filter((o) => o.status === 'تم التسليم')
+    if (!user?.email) {
+      setDelivered(localList)
+      return
+    }
+    supabaseService.getMyOrders(user.email).then(({ data }) => {
+      const dbList = (data || []).filter((o) => o.status === 'تم التسليم')
+      const map = new Map()
+      ;[...localList, ...dbList].forEach((o) => map.set(o.id, o))
+      setDelivered([...map.values()])
+    })
+  }, [user?.email])
+
+  const markSeen = () => {
+    const seen = delivered.map((o) => o.id)
+    window.localStorage.setItem(seenKey, JSON.stringify(seen))
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30)
@@ -129,6 +159,45 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
+
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setBellOpen((v) => !v)
+                  markSeen()
+                }}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full text-burgundy-950 transition-colors hover:bg-burgundy-50"
+                aria-label="إشعارات الطلبات"
+              >
+                <Bell size={20} />
+                {unseenCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-black text-white">
+                    {unseenCount}
+                  </span>
+                )}
+              </button>
+              {bellOpen && (
+                <div className="absolute left-0 top-12 z-50 w-72 origin-top-right rounded-2xl border border-vanilla-100 bg-white p-3 shadow-2xl">
+                  <p className="mb-2 text-sm font-black text-burgundy-950">الإشعارات</p>
+                  {delivered.length === 0 ? (
+                    <p className="rounded-xl bg-cream-50 p-3 text-xs text-burgundy-900/50">
+                      مفيش إشعارات جديدة حاليًا.
+                    </p>
+                  ) : (
+                    delivered.map((o) => (
+                      <Link
+                        key={o.id}
+                        to={`/track?order=${o.id}`}
+                        onClick={markSeen}
+                        className="mb-2 block rounded-xl bg-emerald-50 p-3 text-xs font-bold text-emerald-800 transition-colors hover:bg-emerald-100"
+                      >
+                        🎉 طلبك <b dir="ltr">{o.id}</b> اتوصّل بسلام، ألف مبروك!
+                      </Link>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
 
             <button
               onClick={() => setCartOpen(true)}
