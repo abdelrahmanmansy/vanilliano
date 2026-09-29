@@ -326,7 +326,7 @@ export default function Checkout() {
             <p className="mb-1 text-xs text-white/80">
               📍 {STORE.branches.map((b) => `${b.name} — ${b.address}`).join(' | ')}
             </p>
-            <p className="text-xs text-white/80">
+            <p className="text-xs text-white/80" dir="ltr">
               📞 {STORE.phoneDisplay} · 🌐 {STORE.domain}
             </p>
           </div>

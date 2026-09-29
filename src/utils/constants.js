@@ -12,8 +12,8 @@ export const STORE = {
   email: 'vanilliano@gmail.com',
   currency: 'ج.م',
   whatsapp: '201118215741',
-  phoneDisplay: '011 1821 5741 · 010 0994 2440',
-  phones: ['011 1821 5741', '010 0994 2440'],
+  phoneDisplay: '\u200E010 0994 2440 · \u200E011 1821 5741',
+  phones: ['010 0994 2440', '011 1821 5741'],
   branches: [
     { name: 'فرع دهشور', address: 'بدرشين، الجيزة بجوار كورشي مول' },
   ],
