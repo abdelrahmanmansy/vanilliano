@@ -275,11 +275,14 @@ export default function Checkout() {
             <CheckCircle2 size={40} className="text-emerald-600" />
           </div>
           <h1 className="mb-2 text-2xl font-black text-burgundy-950">
-            شكراً لك! طلبك جاهز للإرسال 🎉
+            {placedOrder.viaWhatsApp
+              ? 'شكراً لك! طلبك جاهز للإرسال 🎉'
+              : 'شكراً لك! طلبك اتسجل في الموقع 🎉'}
           </h1>
           <p className="mb-3 text-sm text-burgundy-900/60">
-            فتحنا لك واتساب برسالة جاهزة فيها تفاصيل طلبك — اضغط إرسال وخلاص،
-            هنرد عليك فوراً للتأكيد.
+            {placedOrder.viaWhatsApp
+              ? 'وصل طلبك للداشبورد، وفتحنا لك واتساب برسالة جاهزة فيها تفاصيله — اضغط إرسال وخلاص، هنرد عليك فوراً للتأكيد.'
+              : 'طلبك وصل للداشبورد وبيتأكد حالياً، هنرد عليك هاتفياً أو عبر واتساب لتأكيده وتفاصيل الدفع.'}
           </p>
           <p className="mb-6 text-sm text-burgundy-900/60">
             رقم الطلب:{' '}
@@ -331,7 +334,9 @@ export default function Checkout() {
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <a href={WHATSAPP_LINK(placedOrder.message)} target="_blank" rel="noreferrer">
               <Button size="lg" icon={MessageCircle} variant="success">
-                إعادة فتح واتساب
+                {placedOrder.viaWhatsApp
+                  ? 'إعادة فتح واتساب'
+                  : 'أرسل التفاصيل عبر واتساب'}
               </Button>
             </a>
             <Link to="/products">
@@ -670,17 +675,28 @@ export default function Checkout() {
               الاستلام للقاهرة والجيزة).
             </p>
 
-            <Button
-              size="lg"
-              fullWidth
-              className="mt-6"
-              icon={MessageCircle}
-              variant="success"
-              loading={placing}
-              onClick={handlePlaceOrder}
-            >
-              {placing ? 'جاهز رسالتك...' : 'إرسال الطلب عبر واتساب'}
-            </Button>
+            <div className="mt-6 flex flex-col gap-3">
+              <Button
+                size="lg"
+                fullWidth
+                icon={CheckCircle2}
+                variant="success"
+                loading={placing}
+                onClick={() => handlePlaceOrder(false)}
+              >
+                {placing ? 'جاري تأكيد طلبك...' : 'تأكيد الطلب مباشرة في الموقع'}
+              </Button>
+              <Button
+                size="lg"
+                fullWidth
+                icon={MessageCircle}
+                variant="outline"
+                loading={placing}
+                onClick={() => handlePlaceOrder(true)}
+              >
+                {placing ? 'جاري تجهيز الرسالة...' : 'أو أرسل الطلب عبر واتساب'}
+              </Button>
+            </div>
           </div>
         </div>
 
