@@ -855,7 +855,6 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy }) {
 
 function DeliveryNotify({ order, onCopy }) {
   const name = order.name || 'حبيبنا'
-  const wa = `https://wa.me/2${String(order.phone || '').replace(/\D/g, '')}`
   const link = `https://abdelrahmanmansy.github.io/vanilliano/track?order=${order.id}`
   const msg =
     `وصل طلبك بالسلامة يا ${name} 💛\n\n` +
@@ -865,6 +864,7 @@ function DeliveryNotify({ order, onCopy }) {
     `شكراً لذوقك الغالي، وبنستناك في كل طلب… لأن أحلى التجارب بتتكرر دايماً مع فانيليانو 🧁\n` +
     `- فانيليانو`
   const subject = `طلبك ${order.id} وصل يا ${name} — تسلملي ذوقك 💛`
+  const wa = `https://wa.me/2${String(order.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`
   const mail = order.email
     ? `mailto:${order.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`
     : null
