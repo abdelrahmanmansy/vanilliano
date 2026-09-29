@@ -650,6 +650,15 @@ export default function Checkout() {
                 <p className="text-[11px] text-burgundy-900/50">
                   أو حوّل على: {PAYMENT.instapayDisplay}
                 </p>
+                <a
+                  href="https://ipn.eg/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-burgundy-700 px-5 py-2.5 text-sm font-black text-white transition-all duration-300 hover:bg-burgundy-800 active:scale-[0.98]"
+                >
+                  <Smartphone size={16} />
+                  فتح تطبيق انستا باي
+                </a>
               </div>
             )}
 
