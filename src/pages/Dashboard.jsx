@@ -250,6 +250,11 @@ export default function Dashboard() {
                     </span>
                     <Badge>{statusText(o.status)}</Badge>
                   </div>
+                  {o.status === 'تم التسليم' && (
+                    <p className="basis-full rounded-2xl bg-emerald-50 p-3 text-center text-sm font-black text-emerald-700">
+                      🎉 يا هلا! طلبك اتوصّل بسلام — متشكرين لثقتك في فانيليانو
+                    </p>
+                  )}
                 </div>
                 <ul className="space-y-2">
                   {o.items.map((item) => (

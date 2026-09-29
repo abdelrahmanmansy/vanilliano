@@ -839,6 +839,59 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy }) {
         </div>
 
         {order.note && <p className="muted" style={{ marginTop: 12, fontSize: 12 }}>{order.note}</p>}
+
+        {order.status === 'تم التسليم' && (
+          <DeliveryNotify
+            order={order}
+            onCopy={(txt) => {
+              if (navigator.clipboard?.writeText) navigator.clipboard.writeText(txt)
+            }}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function DeliveryNotify({ order, onCopy }) {
+  const name = order.name || 'عميلنا العزيز'
+  const msg =
+    `🎉 تم توصيل طلبك يا ${name}!\n\n` +
+    `طلبك رقم ${order.id} وصلك وصحته. ألف مبروك واستمتع بكل لحظة حلوة! 🧁\n\n` +
+    `كل سنة وانت طيب مع فانيليانو دائماً جنبك.\n` +
+    `- فانيليانو`
+  const wa = `https://wa.me/2${String(order.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`
+  const mail = order.email
+    ? `mailto:${order.email}?subject=${encodeURIComponent(`طلبك ${order.id} تم توصيله 🎉`)}&body=${encodeURIComponent(msg)}`
+    : null
+
+  return (
+    <div className="notice">
+      <div className="notice-head">🎉 الطلب اتوصّل — جاهز تبعت للعميل</div>
+      <p className="notice-sub">
+        العميل شاف «تم التسليم» فوراً في الموقع، والرسالة دي تساعده يفرح بالتوصيل.
+      </p>
+      <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <a className="btn green" href={wa} target="_blank" rel="noreferrer">
+          أرسل على واتساب 🟢
+        </a>
+        {mail && (
+          <a className="btn primary" href={mail} target="_blank" rel="noreferrer">
+            أرسل بالإيميل ✉️
+          </a>
+        )}
+        <a
+          className="btn"
+          href="#"
+          onClick={(e) => {
+            e.preventDefault()
+            onCopy(msg)
+            alert('تم نسخ رسالة التوصيل — الصقها في واتساب')
+          }}
+          style={{ textDecoration: 'none' }}
+        >
+          نسخ الرسالة 📋
+        </a>
       </div>
     </div>
   )
