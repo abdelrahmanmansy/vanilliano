@@ -55,7 +55,7 @@ if (btnCount > 0) {
   const err = page.locator('text=يرجى إدخال اسمك الكامل لتتمكن من إتمام الطلب')
   console.log('3) بيظهر منع إتمام الطلب من غير اسم؟', (await err.count()) > 0 ? 'نعم ✅' : 'لا ❌')
   const errEmail = page.locator('text=يرجى إدخال البريد الإلكتروني لنتواصل معك')
-  console.log('4) بيظهر منع إتمام الطلب من غير إيميل؟', (await errEmail.count()) > 0 ? 'نعم ✅' : 'لا ❌')
+  console.log('4) الإيميل اختياري (مفيش رسالة «إجباري»)؟', (await errEmail.count()) === 0 ? 'نعم ✅' : 'لا ❌')
 }
 console.log('PAGEERRORS:', pageErrors.join(' || ') || '(none)')
 await browser.close()

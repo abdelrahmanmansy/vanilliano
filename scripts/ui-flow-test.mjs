@@ -10,7 +10,7 @@ page.on('pageerror', (e) => pageErrors.push(e.message))
 
 const EMAIL = 'flow-test-' + Date.now() % 100000 + '@example.com'
 
-async function checkout({ viaWhatsApp }) {
+async function checkout({ viaWhatsApp, leaveEmailEmpty = false }) {
   await page.goto(SITE, { waitUntil: 'domcontentloaded' })
   await page.evaluate((email) => {
     localStorage.setItem('vanilliano_cart', JSON.stringify([{
@@ -24,8 +24,8 @@ async function checkout({ viaWhatsApp }) {
 
   await page.fill('input[placeholder="اسمك الكريم"]', 'عميل اختبار فلو')
   const email = page.locator('input[type="email"]').first()
-  await email.fill(EMAIL)
-  await page.fill('input[placeholder*="موبايل"], input[placeholder*="رقم"]', '01111846842')
+  await email.fill(leaveEmailEmpty ? '' : EMAIL)
+  await page.fill('input[placeholder="01xxxxxxxxx"]', '01111846842')
   await page.selectOption('select option[value="الهرم"]', 'الهرم').catch(() => {})
   // العنوان التفصيلي
   await page.fill('input[placeholder="الحي، الشارع، رقم المبنى"]', 'شارع اختبار 1')
@@ -53,6 +53,11 @@ console.log('--- المسار التاني: عبر واتساب ---')
 const wa = await checkout({ viaWhatsApp: true })
 console.log('3) الطلب اتسجل وظهرت شاشة النجاح؟', wa.ok > 0 ? 'نعم ✅' : 'لا ❌')
 console.log('4) رقم طلب اتعمل؟', wa.orderId.startsWith('ORD') ? 'نعم ✅ (' + wa.orderId + ')' : 'لا ❌')
+
+console.log('--- الإيميل اختياري (مش اجباري) ---')
+const noEmail = await checkout({ viaWhatsApp: false, leaveEmailEmpty: true })
+console.log('5) الطلب اتسجل من غير إيميل خالص؟', noEmail.ok > 0 ? 'نعم ✅' : 'لا ❌')
+console.log('6) رقم طلب اتعمل من غير إيميل؟', noEmail.orderId.startsWith('ORD') ? 'نعم ✅ (' + noEmail.orderId + ')' : 'لا ❌')
 
 console.log('PAGEERRORS:', pageErrors.join(' || ') || '(none)')
 await browser.close()
