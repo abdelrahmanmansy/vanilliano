@@ -107,6 +107,28 @@ td img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
   font-size: 13px; cursor: pointer; opacity: 0.55;
 }
 .copy-link:hover { opacity: 1; }
+.oc-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.detail-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px; margin-bottom: 8px;
+}
+.kv {
+  background: var(--cream); border: 1px solid #f7efe4;
+  border-radius: 12px; padding: 10px 12px;
+}
+.kv b { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.kv span, .kv a { font-weight: 700; color: var(--ink); word-break: break-all; }
+.kv a:hover { color: var(--brand); }
+.oc-sub { margin: 18px 0 8px; font-size: 15px; }
+.oc-items th { font-size: 12px; }
+.oc-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; flex-wrap: wrap; margin-top: 18px;
+  border-top: 1px solid #f7efe4; padding-top: 16px;
+}
 .flash-row { animation: flashRow 2.4s ease; }
 @keyframes flashRow { 0%, 60% { background: rgba(255, 214, 10, 0.35); } 100% { background: transparent; } }
 

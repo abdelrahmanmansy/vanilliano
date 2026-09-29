@@ -621,6 +621,13 @@ function Orders({ highlightId }) {
   const [savingId, setSavingId] = useState('')
   const [flash, setFlash] = useState('')
   const [showPurchase, setShowPurchase] = useState(false)
+  const [selectedId, setSelectedId] = useState('')
+
+  useEffect(() => {
+    if (highlightId) setSelectedId(highlightId)
+  }, [highlightId])
+
+  const selected = selectedId ? (orders || []).find((o) => o.id === selectedId) || null : null
 
 function notify(msg) {
     setFlash(msg)
@@ -690,6 +697,14 @@ function notify(msg) {
       <div className="card">
         {loading ? (
           <Loading />
+        ) : selected ? (
+          <OrderCard
+            order={selected}
+            savingId={savingId}
+            onStatus={setStatus}
+            onBack={() => setSelectedId('')}
+            onCopy={copyOrderLink}
+          />
         ) : (orders || []).length === 0 ? (
           <div className="empty">لا توجد طلبات بعد</div>
         ) : (
@@ -699,21 +714,11 @@ function notify(msg) {
             </thead>
             <tbody>
               {(orders || []).map((o) => (
-                <tr
-                  key={o.id}
-                  id={`order-${o.id}`}
-                  ref={(el) => {
-                    if (el && highlightId === o.id) {
-                      setTimeout(() => {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                        el.classList.add('flash-row')
-                        setTimeout(() => el.classList.remove('flash-row'), 2400)
-                      }, 250)
-                    }
-                  }}
-                >
+                <tr key={o.id} id={`order-${o.id}`}>
                   <td className="bold">
-                    {o.id}
+                    <button className="btn-link" onClick={() => setSelectedId(o.id)}>
+                      {o.id}
+                    </button>
                     <button
                       className="copy-link"
                       onClick={() => copyOrderLink(o.id)}
@@ -772,6 +777,70 @@ function notify(msg) {
         )}
       </div>
     </>
+  )
+}
+
+function OrderCard({ order, savingId, onStatus, onBack, onCopy }) {
+  const payLabel = (m) =>
+    m === 'cod' ? 'عند الاستلام' : m === 'instapay' ? 'انستا باي' : m === 'vodafone' ? 'فودافون كاش' : m || '—'
+  const items = Array.isArray(order.items) ? order.items : []
+  const wa = `https://wa.me/2${String(order.phone || '').replace(/\D/g, '')}`
+  const badge = order.status === 'تم التسليم' || order.status === 'تم استلام الدفع' ? 'green' : order.status === 'ملغي' ? 'red' : 'gold'
+
+  return (
+    <div className="card">
+      <div className="order-card">
+        <div className="oc-head">
+          <h2 style={{ margin: 0 }}>
+            الطلب <span dir="ltr">{order.id}</span>
+            <button className="copy-link" onClick={() => onCopy(order.id)} title="نسخ رابط الطلب">🔗</button>
+          </h2>
+          <button className="btn" onClick={onBack}>← رجوع لكل الطلبات</button>
+        </div>
+
+        <div className="detail-grid">
+          <div className="kv"><b>العميل</b><span>{order.name || '—'}</span></div>
+          <div className="kv"><b>الجوال (واتساب)</b><a href={wa} target="_blank" rel="noreferrer" dir="ltr">{order.phone || '—'} ✆</a></div>
+          <div className="kv"><b>البريد</b>{order.email ? <a href={`mailto:${order.email}`} dir="ltr">{order.email}</a> : <span>—</span>}</div>
+          <div className="kv"><b>العنوان</b><span>{[order.city, order.address].filter(Boolean).join(' — ') || '—'}</span></div>
+          <div className="kv"><b>الدفع</b><span>{payLabel(order.payment_method)}</span></div>
+          <div className="kv"><b>التاريخ</b><span>{fmtDate(order.created_at)}</span></div>
+        </div>
+
+        <h3 className="oc-sub">التفاصيل</h3>
+        <table className="oc-items">
+          <thead>
+            <tr><th>المنتج</th><th>الكمية</th><th>السعر</th></tr>
+          </thead>
+          <tbody>
+            {items.map((it, i) => (
+              <tr key={i}>
+                <td>{it.name}</td>
+                <td>× {it.quantity}</td>
+                <td className="bold">{formatPrice(it.price)} ج.م</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="oc-foot">
+          <div>
+            <span className="muted">الإجمالي</span>{' '}
+            <b className="bold" style={{ fontSize: 18 }}>{formatPrice(order.total)} ج.م</b>
+          </div>
+          <div className="row">
+            <span className={`badge ${badge}`}>{order.status}</span>
+            <select value={order.status} disabled={savingId === order.id} onChange={(e) => onStatus(order, e.target.value)}>
+              {ORDER_STATUSES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {order.note && <p className="muted" style={{ marginTop: 12, fontSize: 12 }}>{order.note}</p>}
+      </div>
+    </div>
   )
 }
 
