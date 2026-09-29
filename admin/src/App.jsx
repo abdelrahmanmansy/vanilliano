@@ -854,22 +854,20 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy }) {
 }
 
 function DeliveryNotify({ order, onCopy }) {
-  const name = order.name || 'عميلنا العزيز'
+  const name = order.name || 'عميلنا الحلو'
   const msg =
-    `🎉 تم توصيل طلبك يا ${name}!\n\n` +
-    `طلبك رقم ${order.id} وصلك وصحته. ألف مبروك واستمتع بكل لحظة حلوة! 🧁\n\n` +
-    `كل سنة وانت طيب مع فانيليانو دائماً جنبك.\n` +
-    `- فانيليانو`
-  const wa = `https://wa.me/2${String(order.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`
-  const mail = order.email
-    ? `mailto:${order.email}?subject=${encodeURIComponent(`طلبك ${order.id} تم توصيله 🎉`)}&body=${encodeURIComponent(msg)}`
-    : null
+    `يا هلا يا ${name}! 💛\n\n` +
+    `بنبشرك بإن طلبك رقم ${order.id} وصلك بالسلامة، ونتمنى تكون لحظاتك الحلوة معاه مبدأتاش. 🧁✨\n\n` +
+    `لو محتاج أي حاجة في أي وقت، إحنا لسه جنبك وبنرد عليك في نفس اللحظة. 💌\n\n` +
+    `متشكرين لثقتك في فانيليانو، وكل مرة توصلك أحلى تميز وذوق أوفًى.\n` +
+    `- فانيليانو 💐`
+  const subject = `وصل طلبك رقم ${order.id} ونتمنى تسعد بيه يا ${name} 💛`
 
   return (
     <div className="notice">
       <div className="notice-head">🎉 الطلب اتوصّل — جاهز تبعت للعميل</div>
       <p className="notice-sub">
-        العميل شاف «تم التسليم» فوراً في الموقع، والرسالة دي تساعده يفرح بالتوصيل.
+        العميل شاف «تم التسليم» فوراً في الموقع، والرسالة دي تساعدوه يعرف إن طلبه وصل.💛
       </p>
       <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
         <a className="btn green" href={wa} target="_blank" rel="noreferrer">

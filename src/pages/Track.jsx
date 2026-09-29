@@ -22,7 +22,7 @@ const MILESTONES = [
   { label: 'تم استلام الطلب', emoji: '📦' },
   { label: 'تم استلام الدفعة', emoji: '💸' },
   { label: 'الطلب يتجهز', emoji: '🎁' },
-  { label: 'تم التسليم والاستلام', emoji: '🎉' },
+  { label: 'وصل ليك بسلام 💛', emoji: '🎉' },
 ]
 
 const doneCountFor = (status) => {
@@ -50,7 +50,7 @@ const friendlyStatus = (s) => {
     case 'قيد التجهيز':
       return 'الطلب بيتجهز دلوقتي'
     case 'تم التسليم':
-      return 'تم تسليم طلبك، استمتع!'
+      return '🎉 طلبك وصلك بالسلامة — ألف مبروك، واستمتع بأحلى لحظاتك 💛'
     case 'ملغي':
       return 'الطلب اتلغي'
     default:

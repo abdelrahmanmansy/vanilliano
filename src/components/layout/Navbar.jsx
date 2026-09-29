@@ -191,7 +191,7 @@ export default function Navbar() {
                         onClick={markSeen}
                         className="mb-2 block rounded-xl bg-emerald-50 p-3 text-xs font-bold text-emerald-800 transition-colors hover:bg-emerald-100"
                       >
-                        🎉 طلبك <b dir="ltr">{o.id}</b> اتوصّل بسلام، ألف مبروك!
+                        🎉 حاجة حلوة وصلتك! طلبك <b dir="ltr">{o.id}</b> اتوصّل ووصل لحضنك — ألف مبروك 💛
                       </Link>
                     ))
                   )}
