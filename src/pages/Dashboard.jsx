@@ -161,8 +161,14 @@ export default function Dashboard() {
               {orders.length === 0 ? (
                 <p className="text-sm text-burgundy-900/40">لا توجد طلبات بعد.</p>
               ) : (
-                <ul className="space-y-3">
-                  {orders.slice(0, 4).map((o) => (
+                <>
+                  {orders.slice(0, 4).some((o) => o.status === 'تم التسليم') && (
+                    <p className="mb-3 rounded-2xl bg-emerald-50 p-3 text-center text-sm font-black text-emerald-700">
+                      🎉 يا هلا! طلبك اتوصّل بسلام — متشكرين لثقتك في فانيليانو
+                    </p>
+                  )}
+                  <ul className="space-y-3">
+                    {orders.slice(0, 4).map((o) => (
                     <li key={o.id} className="flex items-center justify-between rounded-2xl bg-cream-50/60 p-3">
                       <div>
                         <p className="text-sm font-black text-burgundy-950" dir="ltr">
@@ -189,6 +195,7 @@ export default function Dashboard() {
                     </li>
                   ))}
                 </ul>
+                </>
               )}
               <button
                 onClick={() => setTab('orders')}
