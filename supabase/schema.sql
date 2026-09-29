@@ -239,3 +239,29 @@ $$;
 
 revoke all on function public.my_orders(text) from public;
 grant execute on function public.my_orders(text) to anon, authenticated;
+-- ============================================================
+-- ORDER TRACKING BY ORDER NUMBER (public, works for guests too)
+-- ============================================================
+create or replace function public.track_order(p_id text)
+returns table (
+  id text,
+  created_at timestamptz,
+  items jsonb,
+  total numeric,
+  status text,
+  payment_method text,
+  note text,
+  name text,
+  city text,
+  address text
+)
+language sql security definer stable as $$
+  select o.id, o.created_at, o.items, o.total, o.status, o.payment_method, o.note,
+         o.shipping_info->>'name', o.shipping_info->>'city', o.shipping_info->>'address'
+  from public.orders o
+  where o.id = p_id
+  limit 1;
+$$;
+
+revoke all on function public.track_order(text) from public;
+grant execute on function public.track_order(text) to anon, authenticated;

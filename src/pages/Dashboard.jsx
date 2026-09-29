@@ -166,7 +166,15 @@ export default function Dashboard() {
                     <li key={o.id} className="flex items-center justify-between rounded-2xl bg-cream-50/60 p-3">
                       <div>
                         <p className="text-sm font-black text-burgundy-950" dir="ltr">
-                          {o.id}
+                          <Link
+                            to={`/track?order=${o.id}`}
+                            className="text-burgundy-700 hover:underline"
+                          >
+                            {o.id}
+                          </Link>{' '}
+                          <span className="text-[11px] font-bold text-burgundy-900/40">
+                            تابع
+                          </span>
                         </p>
                         <p className="text-[11px] text-burgundy-900/40">
                           {formatDate(o.created_at || o.date)} · {o.shippingInfo?.name || ''}

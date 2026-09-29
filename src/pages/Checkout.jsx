@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Banknote,
   Smartphone,
+  PackageSearch,
 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { supabaseService } from '../services/supabase'
@@ -339,6 +340,11 @@ export default function Checkout() {
                   : 'أرسل التفاصيل عبر واتساب'}
               </Button>
             </a>
+            <Link to={`/track?order=${placedOrder.id}`}>
+              <Button size="lg" variant="outline" icon={PackageSearch}>
+                تابع طلبك وصل لفين
+              </Button>
+            </Link>
             <Link to="/products">
               <Button size="lg">متابعة التسوق</Button>
             </Link>

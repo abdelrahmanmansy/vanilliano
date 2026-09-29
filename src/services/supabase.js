@@ -43,6 +43,12 @@ export const supabaseService = {
     return { data: data || [], error }
   },
 
+  async trackOrder(id) {
+    if (!client || !id) return { data: null, error: null }
+    const { data, error } = await client.rpc('track_order', { p_id: String(id).trim() })
+    return { data: (data || [])[0] || null, error }
+  },
+
   async getReviews() {
     if (!client) return { data: [], error: null }
     const { data, error } = await client

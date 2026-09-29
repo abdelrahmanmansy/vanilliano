@@ -158,6 +158,7 @@ export default function Footer() {
               { to: '/about', label: 'من نحن' },
               { to: '/contact', label: 'تواصل معنا' },
               { to: '/faq', label: 'الأسئلة الشائعة' },
+              { to: '/track', label: 'تتبع طلبك' },
               { to: '/wishlist', label: 'المفضلة' },
               { to: '/checkout', label: 'إتمام الطلب' },
             ].map((l) => (
