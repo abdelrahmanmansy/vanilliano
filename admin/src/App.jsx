@@ -855,9 +855,11 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy }) {
 
 function DeliveryNotify({ order, onCopy }) {
   const name = order.name || 'حبيبنا'
+  const link = `https://abdelrahmanmansy.github.io/vanilliano/track?order=${order.id}`
   const msg =
     `وصل طلبك بالسلامة يا ${name} 💛\n\n` +
     `طلبك رقم ${order.id} وصل بمواعيده وكله تمام. 🧁🎈\n\n` +
+    `لمتابعة طلبك ومعرفة مكانه وموعد وصوله، افتح الرابط ده:\n${link}\n\n` +
     `نشكرك من القلب على ثقتك في فانيليانو، ونتمنى أن يحوز طلبك على كامل رضاك.\n` +
     `شكراً لذوقك الغالي، وبنستناك في كل طلب… لأن أحلى التجارب بتتكرر دايماً مع فانيليانو 🧁\n` +
     `- فانيليانو`

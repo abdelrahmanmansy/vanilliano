@@ -154,7 +154,7 @@ export default function Checkout() {
     setCoupon(result)
   }
 
-  const buildMessage = (items, orderTotal, orderShipping, orderDiscount) => {
+  const buildMessage = (items, orderTotal, orderShipping, orderDiscount, orderId) => {
     const paymentLabel = {
       instapay: `انستا باي (${PAYMENT.instapayDisplay})`,
       vodafone: `فودافون كاش (${PAYMENT.vodafoneCashDisplay})`,
@@ -203,6 +203,8 @@ export default function Checkout() {
       `📞 الموبايل: ${STORE.phoneDisplay}`,
       `🌐 الموقع: ${STORE.domain}`,
       'الرجاء تأكيد توفر الطلب وموعد التوصيل.',
+      '',
+      `📍 لمتابعة طلبك ومعرفة مكانه وموعد وصوله: ${siteURL}/track?order=${orderId}`,
     )
     return lines.join('\n')
   }
@@ -252,7 +254,7 @@ export default function Checkout() {
       return
     }
     const order = saveOrder()
-    const message = buildMessage(order.items, order.total, order.shipping, order.discount)
+    const message = buildMessage(order.items, order.total, order.shipping, order.discount, order.id)
     setPlacing(true)
     setTimeout(() => {
       clearCart()

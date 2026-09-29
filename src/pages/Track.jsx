@@ -40,6 +40,38 @@ const doneCountFor = (status) => {
   }
 }
 
+const whereFor = (s) => {
+  switch (s) {
+    case 'جديد':
+    case 'بانتظار التأكيد':
+      return 'لسه معانا في المخزن وبنجهّزه'
+    case 'تم استلام الدفع':
+      return 'الدفعة اتأكدت والطلب هيتجهز'
+    case 'قيد التجهيز':
+      return 'بيتجهز دلوقتي في المخزن وبانغلّفهولك'
+    case 'تم التسليم':
+      return 'وصل ليك خلاص ✓'
+    default:
+      return '—'
+  }
+}
+
+const etaFor = (s) => {
+  switch (s) {
+    case 'جديد':
+    case 'بانتظار التأكيد':
+      return 'خلال ٢٤–٤٨ ساعة من تأكيد الطلب'
+    case 'تم استلام الدفع':
+      return 'خلال ٤٨ ساعة من تأكيد الدفعة'
+    case 'قيد التجهيز':
+      return 'بيتطلق للشحن خلال ٢٤ ساعة'
+    case 'تم التسليم':
+      return 'دلوقتي خلاص 🎉'
+    default:
+      return '—'
+  }
+}
+
 const friendlyStatus = (s) => {
   switch (s) {
     case 'جديد':
@@ -165,6 +197,18 @@ export default function Track() {
                 </p>
               </div>
             </div>
+
+            {!cancelled && (
+              <div className="rounded-2xl bg-vanilla-50 p-4 text-sm">
+                <p className="mb-2 font-black text-burgundy-950">
+                  📍 فين طلبك دلوقتي؟{' '}
+                  <span className="text-emerald-600">{whereFor(order.status)}</span>
+                </p>
+                <p className="font-black text-burgundy-950">
+                  ⏰ هيوصلك امتى؟ <span className="text-burgundy-700">{etaFor(order.status)}</span>
+                </p>
+              </div>
+            )}
 
             {cancelled ? (
               <div className="rounded-2xl bg-red-50 p-4 text-center text-sm font-black text-red-700">
