@@ -25,6 +25,7 @@ const NAV_ROUTES = [
   { to: '/', label: 'الرئيسية' },
   { to: '/products', label: 'المتجر' },
   { to: '/offers', label: 'العروض' },
+  { to: '/track', label: 'تتبع طلبك' },
   { to: '/about', label: 'من نحن' },
   { to: '/contact', label: 'تواصل معنا' },
 ]
