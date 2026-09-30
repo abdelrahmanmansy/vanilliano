@@ -84,16 +84,12 @@ export const adminService = {
   },
 
   getAllOrderMessages() {
-    console.info('PROBE_AGOM_START')
     return run(
       client
         .from('order_messages')
         .select('*')
         .order('created_at', { ascending: false }),
-    ).then((rows) => {
-      console.info('PROBE_AGOM_RES', rows?.length)
-      return rows
-    })
+    )
   },
 
   addOrderMessage(orderId, sender, body) {

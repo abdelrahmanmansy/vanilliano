@@ -654,15 +654,12 @@ function Orders({ highlightId }) {
   async function loadMsgCounts() {
     try {
       const rows = (await adminService.getAllOrderMessages()) || []
-      console.info('PROBE_LMC_MAP', JSON.stringify(rows.map((m) => m.order_id)))
       const map = {}
       for (const m of rows) {
         if (m.sender === 'customer' && !m.seen) map[m.order_id] = (map[m.order_id] || 0) + 1
       }
-      console.info('PROBE_LMC_SET', JSON.stringify(map))
       setMsgCounts(map)
-    } catch (e) {
-      console.info('PROBE_LMC_ERR', e?.message)
+    } catch {
       /* ignore */
     }
   }
@@ -670,9 +667,8 @@ function Orders({ highlightId }) {
   useEffect(() => {
     if (highlightId) setSelectedId(highlightId)
     let alive = true
-    console.info('PROBE_EFFECT_RUN')
-    const t = setTimeout(() => { if (alive) { console.info('PROBE_POLL_900'); loadMsgCounts() } }, 900)
-    const iv = setInterval(() => { if (alive) { console.info('PROBE_POLL_30'); loadMsgCounts() } }, 30000)
+    const t = setTimeout(() => { if (alive) loadMsgCounts() }, 900)
+    const iv = setInterval(() => { if (alive) loadMsgCounts() }, 30000)
     return () => { alive = false; clearTimeout(t); clearInterval(iv) }
   }, [highlightId, orders ? orders.length : 0])
 
