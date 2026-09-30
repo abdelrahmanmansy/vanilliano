@@ -666,8 +666,11 @@ function Orders({ highlightId }) {
 
   useEffect(() => {
     if (highlightId) setSelectedId(highlightId)
-    loadMsgCounts()
-  }, [highlightId])
+    let alive = true
+    const t = setTimeout(() => { if (alive) loadMsgCounts() }, 900)
+    const iv = setInterval(() => { if (alive) loadMsgCounts() }, 30000)
+    return () => { alive = false; clearTimeout(t); clearInterval(iv) }
+  }, [highlightId, orders ? orders.length : 0])
 
   const selected = selectedId ? (orders || []).find((o) => o.id === selectedId) || null : null
 
