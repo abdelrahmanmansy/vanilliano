@@ -44,6 +44,27 @@ const deliveryChatMsg = (name) =>
   `نشكرك من القلب على ثقتك في فانيليانو، ونتمنى أن يحوز طلبك على كامل رضاك.\n` +
   `شكراً لذوقك الغالي، وبنستناك في كل طلب… لأن أحلى التجارب بتتكرر دايماً مع فانيليانو 💛`
 
+const omKey = (orderId) => `vanilliano_om_${orderId}`
+
+const readLocalChat = (orderId) => {
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(omKey(orderId)) || '[]')
+    return Array.isArray(raw) ? raw : []
+  } catch {
+    return []
+  }
+}
+
+const writeLocalChat = (orderId, list) => {
+  try {
+    window.localStorage.setItem(omKey(orderId), JSON.stringify(list))
+  } catch {
+    /* ignore */
+  }
+}
+
+const byDate = (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
+
 const assetURL = (src) => {
   if (!src || typeof src !== 'string') return src
   const base = import.meta.env.BASE_URL || '/'
@@ -677,9 +698,20 @@ function notify(msg) {
       await adminService.updateOrder(order.id, patch)
       if (status === 'تم التسليم') {
         try {
-          await adminService.addOrderMessage(order.id, 'merchant', deliveryChatMsg(order.name || 'حبيبنا'))
+          const row = await adminService.addOrderMessage(order.id, 'merchant', deliveryChatMsg(order.name || 'حبيبنا'))
+          writeLocalChat(order.id, [...readLocalChat(order.id), ...(row || [])].sort(byDate))
         } catch {
-          /* الشات بيتفتعل لما الدالة تتحط */
+          writeLocalChat(
+            order.id,
+            [...readLocalChat(order.id), {
+              id: 'local-' + Date.now(),
+              order_id: order.id,
+              sender: 'merchant',
+              body: deliveryChatMsg(order.name || 'حبيبنا'),
+              seen: false,
+              created_at: new Date().toISOString(),
+            }].sort(byDate),
+          )
         }
       }
       await refresh()
@@ -824,17 +856,22 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChange
     let cancelled = false
     setMsgLoading(true)
     setMsgs([])
-    adminService
+    const fromDb = adminService
       .listOrderMessages(order.id)
       .then((rows) => {
         if (cancelled) return
-        setMsgs(rows || [])
+        const merged = [...(rows || [])].sort(byDate)
+        writeLocalChat(order.id, merged)
+        setMsgs(merged)
         const hadUnseen = (rows || []).some((m) => m.sender === 'customer' && !m.seen)
         if (hadUnseen) {
           adminService.markOrderMessagesSeen(order.id).finally(() => onMessagesChanged && onMessagesChanged())
         }
       })
-      .catch(() => { if (!cancelled) setMsgs([]) })
+      .catch(() => {
+        if (cancelled) return
+        setMsgs(readLocalChat(order.id))
+      })
       .finally(() => { if (!cancelled) setMsgLoading(false) })
     return () => { cancelled = true }
   }, [order.id])
@@ -845,10 +882,23 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChange
     setMsgBusy(true)
     try {
       const row = await adminService.addOrderMessage(order.id, 'merchant', body)
-      setMsgs((prev) => [...prev, ...(row || [])])
+      const next = [...readLocalChat(order.id), ...(row || [])].sort(byDate)
+      writeLocalChat(order.id, next)
+      setMsgs(next)
       setMsgText('')
-    } catch (e) {
-      alert('تعذر إرسال الرسالة: ' + e.message)
+    } catch {
+      const localMsg = {
+        id: 'local-' + Date.now(),
+        order_id: order.id,
+        sender: 'merchant',
+        body,
+        seen: false,
+        created_at: new Date().toISOString(),
+      }
+      const next = [...readLocalChat(order.id), localMsg].sort(byDate)
+      writeLocalChat(order.id, next)
+      setMsgs(next)
+      setMsgText('')
     } finally {
       setMsgBusy(false)
     }

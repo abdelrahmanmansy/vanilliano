@@ -163,10 +163,9 @@ export default function Track() {
     setChat(mergeChat(chat, [localMsg]))
     setChatText('')
     const { data, error } = await supabaseService.saveOrderMessage(order.id, 'customer', body)
-    if (!error) {
-      const merged = mergeChat(readLocalChat(order.id), data)
-      writeLocalChat(order.id, merged)
-      setChat(merged)
+    if (!error && data && data.length) {
+      writeLocalChat(order.id, data)
+      setChat(data)
     }
     setSending(false)
   }
