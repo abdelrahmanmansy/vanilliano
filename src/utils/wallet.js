@@ -13,12 +13,13 @@ export const walletTarget = (wallet, platform) => {
   // لينك الاستقبال الحقيقي (ipn.eg/S/...) بيفتح التطبيق والمبلغ متعبّى
   if (wallet.scheme && platform !== 'desktop') return wallet.scheme
 
-  // أندرويد: intent بيفتح التطبيق المثبّت على طول من غير أي بيانات،
-  // ولو مش مثبّت بيفتح المتجر. ده الطريقة المضمونة لفتح التطبيق فقط.
+  // أندرويد: بنطلب الـlauncher activity صراحةً (MAIN/LAUNCHER).
+  // لو طلبنا VIEW من غير بيانات، مفيش Activity هيتطابق فبيقع على fallback.
   if (platform === 'android') {
     const fallback = wallet.install || wallet.web
     return (
-      'intent://#Intent;action=android.intent.action.VIEW;' +
+      'intent://#Intent;action=android.intent.action.MAIN;' +
+      'category=android.intent.category.LAUNCHER;' +
       (wallet.pkg ? `package=${wallet.pkg};` : '') +
       `S.browser_fallback_url=${encodeURIComponent(fallback)};end`
     )
