@@ -53,6 +53,9 @@ export const WALLETS = [
     ...WALLET_NUMBERS.vodafone,
     pkg: 'com.vodafone.spoc',
     install: 'https://play.google.com/store/apps/details?id=com.vodafone.spoc',
+    // آيفون: تطبيق فودافون كاش المصري غير متاح منفصل —
+    // محفظته جوه تطبيق Ana Vodafone. بنوديه على صفحة فودافون كاش.
+    ios: 'https://www.vodafone.com.eg/vodafone-cash',
     web: 'https://www.vodafone.com.eg/vodafone-cash',
   },
   {
@@ -64,6 +67,9 @@ export const WALLETS = [
     pkg: 'com.orange.orangemoney_customer',
     install:
       'https://play.google.com/store/apps/details?id=com.orange.orangemoney_customer',
+    // آيفون: تطبيق أورنج موني المصري غير متاح، ومحفظةه بتتوزّع
+    // على تطبيق My Orange. بنوديه على الموقع الرسمي بدل متجر خاطئ.
+    ios: 'https://www.orange.eg/ar/mobile-money',
     web: 'https://www.orange.eg/ar/mobile-money',
   },
   {
@@ -74,6 +80,8 @@ export const WALLETS = [
     ...WALLET_NUMBERS.etisalat,
     pkg: 'com.etisalat.flous',
     install: 'https://play.google.com/store/apps/details?id=com.etisalat.flous',
+    // آيفون: نفس التطبيق باسم e& money - EG
+    ios: 'https://apps.apple.com/eg/app/e-money-eg/id1123428821',
     web: 'https://www.etisalat.eg/ar/consumer/ecash',
   },
   {
