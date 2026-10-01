@@ -731,7 +731,7 @@ export default function Checkout() {
                 <p className="mt-3 text-[11px] text-burgundy-900/50">
                   المبلغ المحسوب:{' '}
                   <b className="font-black text-burgundy-950">
-                    {formatPrice(orderTotal)} ج.م
+                    {formatPrice(total)} ج.م
                   </b>
                   {' · '}
                   حوّل على:{' '}
