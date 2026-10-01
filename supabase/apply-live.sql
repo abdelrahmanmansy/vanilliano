@@ -1,10 +1,10 @@
--- ============================================================
--- فانيليانو — تنشيط «تتبع الطلب» + «المحادثة» عبر الموقع
--- شغّل هذا الملف كاملاً مرة واحدة في:
---   Supabase Dashboard -> SQL Editor -> الصق -> Run
+﻿-- ============================================================
+-- ÙØ§Ù†ÙŠÙ„ÙŠØ§Ù†Ùˆ â€” ØªÙ†Ø´ÙŠØ· Â«ØªØªØ¨Ø¹ Ø§Ù„Ø·Ù„Ø¨Â» + Â«Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø©Â» Ø¹Ø¨Ø± Ø§Ù„Ù…ÙˆÙ‚Ø¹
+-- Ø´ØºÙ‘Ù„ Ù‡Ø°Ø§ Ø§Ù„Ù…Ù„Ù ÙƒØ§Ù…Ù„Ø§Ù‹ Ù…Ø±Ø© ÙˆØ§Ø­Ø¯Ø© ÙÙŠ:
+--   Supabase Dashboard -> SQL Editor -> Ø§Ù„ØµÙ‚ -> Run
 -- ============================================================
 
--- (1) جدول محادثة الطلب (الرسائل بين العميل وصاحب المتجر)
+-- (1) Ø¬Ø¯ÙˆÙ„ Ù…Ø­Ø§Ø¯Ø«Ø© Ø§Ù„Ø·Ù„Ø¨ (Ø§Ù„Ø±Ø³Ø§Ø¦Ù„ Ø¨ÙŠÙ† Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙˆØµØ§Ø­Ø¨ Ø§Ù„Ù…ØªØ¬Ø±)
 create table if not exists public.order_messages (
   id uuid primary key default gen_random_uuid(),
   "order_id" text not null,
@@ -28,7 +28,7 @@ grant select, insert, update, delete on table public.order_messages to anon, aut
 
 create index if not exists order_messages_order_idx on public.order_messages (order_id, created_at asc);
 
--- (2) قراءة آمنة لرسائل طلب معين (للزائر العادي)
+-- (2) Ù‚Ø±Ø§Ø¡Ø© Ø¢Ù…Ù†Ø© Ù„Ø±Ø³Ø§Ø¦Ù„ Ø·Ù„Ø¨ Ù…Ø¹ÙŠÙ† (Ù„Ù„Ø²Ø§Ø¦Ø± Ø§Ù„Ø¹Ø§Ø¯ÙŠ)
 create or replace function public.order_messages_for(p_order_id text)
 returns table (
   id uuid,
@@ -48,7 +48,7 @@ $$;
 revoke all on function public.order_messages_for(text) from public;
 grant execute on function public.order_messages_for(text) to anon, authenticated;
 
--- (3) تتبع الطلب برقمه (للزائر العادي — من أي جهاز)
+-- (3) ØªØªØ¨Ø¹ Ø§Ù„Ø·Ù„Ø¨ Ø¨Ø±Ù‚Ù…Ù‡ (Ù„Ù„Ø²Ø§Ø¦Ø± Ø§Ù„Ø¹Ø§Ø¯ÙŠ â€” Ù…Ù† Ø£ÙŠ Ø¬Ù‡Ø§Ø²)
 create or replace function public.track_order(p_id text)
 returns table (
   id text,
@@ -73,7 +73,7 @@ $$;
 revoke all on function public.track_order(text) from public;
 grant execute on function public.track_order(text) to anon, authenticated;
 
--- (4) «طلباتي» — العميل يفتح صفحة التتبع ويشوف طلباته برقم موبايله من غير رقم الطلب
+-- (4) Â«Ø·Ù„Ø¨Ø§ØªÙŠÂ» â€” Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙŠÙØªØ­ ØµÙØ­Ø© Ø§Ù„ØªØªØ¨Ø¹ ÙˆÙŠØ´ÙˆÙ Ø·Ù„Ø¨Ø§ØªÙ‡ Ø¨Ø±Ù‚Ù… Ù…ÙˆØ¨Ø§ÙŠÙ„Ù‡ Ù…Ù† ØºÙŠØ± Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨
 alter table public.orders add column if not exists source text;
 
 create or replace function public.orders_by_phone(p_phone text)
@@ -89,7 +89,7 @@ $$;
 revoke all on function public.orders_by_phone(text) from public;
 grant execute on function public.orders_by_phone(text) to anon, authenticated;
 
--- (5) تسجيل مصدر الزيارة (واتساب / انستغرام / فيسبوك / مباشر) لظهوره في اللوحة
+-- (5) ØªØ³Ø¬ÙŠÙ„ Ù…ØµØ¯Ø± Ø§Ù„Ø²ÙŠØ§Ø±Ø© (ÙˆØ§ØªØ³Ø§Ø¨ / Ø§Ù†Ø³ØªØºØ±Ø§Ù… / ÙÙŠØ³Ø¨ÙˆÙƒ / Ù…Ø¨Ø§Ø´Ø±) Ù„Ø¸Ù‡ÙˆØ±Ù‡ ÙÙŠ Ø§Ù„Ù„ÙˆØ­Ø©
 create or replace function public.set_order_source(p_id text, p_source text)
 returns setof public.orders
 language sql security definer set search_path = public as $$
@@ -102,3 +102,17 @@ $$;
 
 revoke all on function public.set_order_source(text, text) from public;
 grant execute on function public.set_order_source(text, text) to anon, authenticated;
+
+-- (6) لينك شخصي "كل طلباتك": توكن من الموبايل (نفس حساب sha256 في src/utils/token.js)
+create or replace function public.orders_by_token(p_token text)
+returns setof public.orders
+language sql security definer stable set search_path = public as $$
+  select *
+  from public.orders o
+  where encode(sha256(convert_to('vanilliano|' || regexp_replace(coalesce(o.phone, ''), '\D', '', 'g'), 'UTF8')), 'hex') = lower(coalesce(p_token, ''))
+  order by o.created_at desc;
+$$;
+
+revoke all on function public.orders_by_token(text) from public;
+grant execute on function public.orders_by_token(text) to anon, authenticated;
+

@@ -6,9 +6,11 @@ import { useAuth } from '../context/AuthContext'
 import { formatPrice, formatDate } from '../utils/format'
 import { STORAGE_KEYS } from '../utils/constants'
 import { detectOrderSource } from '../utils/source'
+import { phoneToken } from '../utils/token'
 import Button from '../components/ui/Button'
 
 const PHONE_KEY = 'vanilliano_phone'
+const TOKEN_KEY = 'vanilliano_token'
 
 const stripPhone = (p) => String(p || '').replace(/\D/g, '')
 
@@ -23,6 +25,22 @@ const readStoredPhone = () => {
 const saveStoredPhone = (phone) => {
   try {
     window.localStorage.setItem(PHONE_KEY, String(phone || ''))
+  } catch {
+    /* ignore */
+  }
+}
+
+const readStoredToken = () => {
+  try {
+    return window.localStorage.getItem(TOKEN_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+const saveStoredToken = (token) => {
+  try {
+    window.localStorage.setItem(TOKEN_KEY, String(token || ''))
   } catch {
     /* ignore */
   }
@@ -158,6 +176,7 @@ export default function Track() {
   const [chatLoading, setChatLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [phone, setPhone] = useState('')
+  const [showPhone, setShowPhone] = useState(false)
   const [myOrders, setMyOrders] = useState([])
   const [lookup, setLookup] = useState('idle')
 
@@ -218,9 +237,15 @@ export default function Track() {
     if (found) {
       setOrder(found)
       loadChat(id)
+      const linkToken = params.get('c')
+      if (linkToken) saveStoredToken(linkToken)
       if (found.phone) {
         saveStoredPhone(found.phone)
         setPhone((cur) => (stripPhone(cur) ? cur : found.phone))
+        if (!linkToken) {
+          const tok = await phoneToken(found.phone)
+          if (tok) saveStoredToken(tok)
+        }
       }
       supabaseService.setOrderSource(id, detectOrderSource())
     } else {
@@ -236,7 +261,28 @@ export default function Track() {
     const list = Array.isArray(data) ? data.sort(byDate).reverse() : []
     setMyOrders(list)
     setLookup(list.length ? 'done' : 'empty')
-    if (list.length) saveStoredPhone(phoneStr)
+    if (list.length) {
+      saveStoredPhone(phoneStr)
+      const tok = await phoneToken(p)
+      if (tok) saveStoredToken(tok)
+    }
+  }
+
+  // المسار الأساسي: العميل ما بيعملش حاجة — بنجيب طلباته من التوكن المحفوظ عنده
+  const loadMyOrdersByToken = async (token) => {
+    const tok = String(token || '').trim()
+    if (!tok) return false
+    setLookup('loading')
+    const { data } = await supabaseService.getOrdersByToken(tok)
+    const list = Array.isArray(data) ? data.sort(byDate).reverse() : []
+    if (!list.length) {
+      setLookup('empty')
+      return false
+    }
+    saveStoredToken(tok)
+    setMyOrders(list)
+    setLookup('done')
+    return true
   }
 
   const openFromList = (o) => {
@@ -255,19 +301,40 @@ export default function Track() {
 
   useEffect(() => {
     const id = params.get('order')
-    if (id) load(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.get('order')])
+    const token = params.get('c')
+    let alive = true
 
-  useEffect(() => {
-    if (params.get('order')) return
-    const stored = readStoredPhone()
-    if (stripPhone(stored)) {
-      setPhone(stored)
-      loadMyOrders(stored)
+    const run = async () => {
+      // 1) لينك طلب مباشر (من الواتساب) — يفتح الطلب ويسجّل الجهاز على طول
+      if (id) {
+        await load(id)
+        return
+      }
+      // 2) لينك شخصي "كل طلباتك" — يشوف طلباته على طول من غير كتابة
+      if (token) {
+        const ok = await loadMyOrdersByToken(token)
+        if (!alive) return
+        if (ok) return
+      }
+      // 3) زائر راجع من قبل — بنجيب طلباته من ذاكرة جهازه على طول
+      const storedToken = readStoredToken()
+      if (storedToken) {
+        const ok = await loadMyOrdersByToken(storedToken)
+        if (!alive || ok) return
+      }
+      const storedPhone = readStoredPhone()
+      if (stripPhone(storedPhone)) {
+        setPhone(storedPhone)
+        await loadMyOrders(storedPhone)
+      }
+    }
+
+    run()
+    return () => {
+      alive = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.get('order')])
+  }, [params.get('order'), params.get('c')])
 
   const items = Array.isArray(order?.items) ? order.items : []
   const done = doneCountFor(order?.status)
@@ -282,7 +349,7 @@ export default function Track() {
           </div>
           <h1 className="text-2xl font-black text-burgundy-950">تتبع طلبك</h1>
           <p className="mt-2 text-sm text-burgundy-900/60">
-            اكتب رقم الطلب اللي وصلك، أو خش على «طلباتي» برقم موبايلك واختار طلبك على طول
+            افتح الصفحة وهتشوف طلباتك على طول — من غير ما تكتب رقم الطلب ولا الموبايل
           </p>
         </div>
 
@@ -293,29 +360,39 @@ export default function Track() {
               <div>
                 <p className="text-sm font-black text-burgundy-950">طلباتي</p>
                 <p className="text-[11px] text-burgundy-900/50">
-                  لو طلبت من فانيليانو قبل كده، اكتب موبايلك وهتشوف كل طلباتك من غير ما تدور على
-                  أرقام الطلبات
+                  لو زرت الصفحة دي قبل كده أو فتحت لينك الطلب اللي وصلتك، طلباتك بتظهر هنا
+                  أوتوماتيك
                 </p>
               </div>
             </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                loadMyOrders(phone)
-              }}
-              className="flex gap-2"
-            >
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="رقم الموبايل (مثال 01012345678)"
-                dir="ltr"
-                className="w-full rounded-2xl border border-vanilla-200 bg-white px-4 py-3 text-sm font-bold text-right text-burgundy-950 outline-none transition-colors focus:border-burgundy-400"
-              />
-              <Button type="submit" size="lg" variant="dark" loading={lookup === 'loading'}>
-                {lookup === 'loading' ? 'بيعاين...' : 'عرض طلباتي'}
-              </Button>
-            </form>
+            {lookup !== 'done' || showPhone ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  loadMyOrders(phone)
+                }}
+                className="flex gap-2"
+              >
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="رقم الموبايل (مثال 01012345678)"
+                  dir="ltr"
+                  className="w-full rounded-2xl border border-vanilla-200 bg-white px-4 py-3 text-sm font-bold text-right text-burgundy-950 outline-none transition-colors focus:border-burgundy-400"
+                />
+                <Button type="submit" size="lg" variant="dark" loading={lookup === 'loading'}>
+                  {lookup === 'loading' ? 'بيعاين...' : 'عرض طلباتي'}
+                </Button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowPhone(true)}
+                className="text-[11px] font-bold text-burgundy-800 underline underline-offset-4"
+              >
+                🔍 بحث برقم موبايل تاني
+              </button>
+            )}
 
             {lookup === 'empty' && (
               <p className="mt-3 rounded-2xl bg-white p-3 text-center text-xs font-bold text-burgundy-900/50">

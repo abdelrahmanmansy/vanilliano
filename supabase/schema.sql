@@ -1,5 +1,5 @@
--- Vanilliano - مخطط قاعدة بيانات Supabase
--- شغّل ده في Supabase Dashboard -> SQL Editor ثم Run
+﻿-- Vanilliano - Ù…Ø®Ø·Ø· Ù‚Ø§Ø¹Ø¯Ø© Ø¨ÙŠØ§Ù†Ø§Øª Supabase
+-- Ø´ØºÙ‘Ù„ Ø¯Ù‡ ÙÙŠ Supabase Dashboard -> SQL Editor Ø«Ù… Run
 
 create table if not exists public.products (
   "id" text primary key,
@@ -19,12 +19,12 @@ create table if not exists public.products (
 
 alter table public.products enable row level security;
 
--- أي شخص (الزوار) يقدر يقرأ المنتجات
+-- Ø£ÙŠ Ø´Ø®Øµ (Ø§Ù„Ø²ÙˆØ§Ø±) ÙŠÙ‚Ø¯Ø± ÙŠÙ‚Ø±Ø£ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª
 drop policy if exists "public can view products" on public.products;
 create policy "public can view products" on public.products
   for select using (true);
 
--- صاحب المتجر (المسجل دخوله) يقدر يضيف/يعدّل/يمسح
+-- ØµØ§Ø­Ø¨ Ø§Ù„Ù…ØªØ¬Ø± (Ø§Ù„Ù…Ø³Ø¬Ù„ Ø¯Ø®ÙˆÙ„Ù‡) ÙŠÙ‚Ø¯Ø± ÙŠØ¶ÙŠÙ/ÙŠØ¹Ø¯Ù‘Ù„/ÙŠÙ…Ø³Ø­
 drop policy if exists "authenticated manage products" on public.products;
 create policy "authenticated manage products" on public.products
   for all using (auth.uid() is not null) with check (auth.uid() is not null);
@@ -33,11 +33,11 @@ grant select on table public.products to anon, authenticated;
 grant insert, update, delete on table public.products to authenticated;
 
 -- ============================================================
--- آراء العملاء (reviews)
+-- Ø¢Ø±Ø§Ø¡ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ (reviews)
 -- ============================================================
 create table if not exists public.reviews (
   id uuid primary key default gen_random_uuid(),
-  name text not null default 'عميل فانيليانو',
+  name text not null default 'Ø¹Ù…ÙŠÙ„ ÙØ§Ù†ÙŠÙ„ÙŠØ§Ù†Ùˆ',
   text text not null,
   rating smallint not null default 5 check (rating between 1 and 5),
   created_at timestamptz not null default now()
@@ -45,7 +45,7 @@ create table if not exists public.reviews (
 
 alter table public.reviews enable row level security;
 
--- الزوار يقرأون ويضيفون رأياً (فورم الحوار العام)
+-- Ø§Ù„Ø²ÙˆØ§Ø± ÙŠÙ‚Ø±Ø£ÙˆÙ† ÙˆÙŠØ¶ÙŠÙÙˆÙ† Ø±Ø£ÙŠØ§Ù‹ (ÙÙˆØ±Ù… Ø§Ù„Ø­ÙˆØ§Ø± Ø§Ù„Ø¹Ø§Ù…)
 drop policy if exists "public can view reviews" on public.reviews;
 create policy "public can view reviews" on public.reviews
   for select using (true);
@@ -56,7 +56,7 @@ create policy "public can insert reviews" on public.reviews
 
 grant select, insert on table public.reviews to anon, authenticated;
 
--- صاحب المتجر بيوافق/يعدل/يمسح الآراء من لوحة التحكم
+-- ØµØ§Ø­Ø¨ Ø§Ù„Ù…ØªØ¬Ø± Ø¨ÙŠÙˆØ§ÙÙ‚/ÙŠØ¹Ø¯Ù„/ÙŠÙ…Ø³Ø­ Ø§Ù„Ø¢Ø±Ø§Ø¡ Ù…Ù† Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…
 drop policy if exists "auth can moderate reviews" on public.reviews;
 create policy "auth can moderate reviews" on public.reviews
   for all using (auth.uid() is not null) with check (auth.uid() is not null);
@@ -65,11 +65,11 @@ grant update, delete on table public.reviews to authenticated;
 
 create index if not exists reviews_created_at_idx on public.reviews (created_at desc);
 
--- الموافقة على عرض الرأي قبل النشر (قياساً على طلبك)
+-- Ø§Ù„Ù…ÙˆØ§ÙÙ‚Ø© Ø¹Ù„Ù‰ Ø¹Ø±Ø¶ Ø§Ù„Ø±Ø£ÙŠ Ù‚Ø¨Ù„ Ø§Ù„Ù†Ø´Ø± (Ù‚ÙŠØ§Ø³Ø§Ù‹ Ø¹Ù„Ù‰ Ø·Ù„Ø¨Ùƒ)
 alter table public.reviews add column if not exists "approved" boolean not null default false;
 
 -- ============================================================
--- الطلبات (orders)
+-- Ø§Ù„Ø·Ù„Ø¨Ø§Øª (orders)
 -- ============================================================
 create table if not exists public.orders (
   "id" text primary key,
@@ -82,7 +82,7 @@ create table if not exists public.orders (
   "items" jsonb,
   "total" numeric,
   "note" text,
-  "status" text not null default 'جديد',
+  "status" text not null default 'Ø¬Ø¯ÙŠØ¯',
   "source" text,
   "created_at" timestamptz not null default now(),
   "completed_at" timestamptz
@@ -106,7 +106,7 @@ grant select, update, delete on table public.orders to authenticated;
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
 
 -- ============================================================
--- سجل النشاط (activity)
+-- Ø³Ø¬Ù„ Ø§Ù„Ù†Ø´Ø§Ø· (activity)
 -- ============================================================
 create table if not exists public.activity (
   id uuid primary key default gen_random_uuid(),
@@ -132,7 +132,7 @@ grant select, delete on table public.activity to authenticated;
 create index if not exists activity_created_at_idx on public.activity (created_at desc);
 
 -- ============================================================
--- رسائل التواصل (messages)
+-- Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„ØªÙˆØ§ØµÙ„ (messages)
 -- ============================================================
 create table if not exists public.messages (
   id uuid primary key default gen_random_uuid(),
@@ -163,8 +163,8 @@ grant select, update, delete on table public.messages to authenticated;
 create index if not exists messages_created_at_idx on public.messages (created_at desc);
 
 -- ============================================================
--- الأكثر مبيعاً (top_sellers) — دالة آمنة لقراءة الزائر
--- بتحسب الكميات والإيرادات من الطلبات، والأونر بايبا عن RLS
+-- Ø§Ù„Ø£ÙƒØ«Ø± Ù…Ø¨ÙŠØ¹Ø§Ù‹ (top_sellers) â€” Ø¯Ø§Ù„Ø© Ø¢Ù…Ù†Ø© Ù„Ù‚Ø±Ø§Ø¡Ø© Ø§Ù„Ø²Ø§Ø¦Ø±
+-- Ø¨ØªØ­Ø³Ø¨ Ø§Ù„ÙƒÙ…ÙŠØ§Øª ÙˆØ§Ù„Ø¥ÙŠØ±Ø§Ø¯Ø§Øª Ù…Ù† Ø§Ù„Ø·Ù„Ø¨Ø§ØªØŒ ÙˆØ§Ù„Ø£ÙˆÙ†Ø± Ø¨Ø§ÙŠØ¨Ø§ Ø¹Ù† RLS
 -- ============================================================
 create or replace function public.top_sellers(max_count int default 8)
 returns table (
@@ -186,7 +186,7 @@ language sql security definer stable as $$
     sum((it->>'quantity')::int)::bigint as qty,
     sum((it->>'quantity')::int * coalesce((it->>'price')::numeric, 0)) as total
   from exploded
-  where status is distinct from 'ملغي'
+  where status is distinct from 'Ù…Ù„ØºÙŠ'
   group by it->>'id', it->>'name'
   order by qty desc
   limit max_count;
@@ -196,8 +196,8 @@ revoke all on function public.top_sellers(int) from public;
 grant execute on function public.top_sellers(int) to anon, authenticated;
 
 -- ============================================================
--- خصم أول طلب للعضو المسجل — دالة آمنة للزائر
--- بترجع 26 لو الأيميل ما عندهوش طلبات قبله (غير ملغي) و 0 غير كده
+-- Ø®ØµÙ… Ø£ÙˆÙ„ Ø·Ù„Ø¨ Ù„Ù„Ø¹Ø¶Ùˆ Ø§Ù„Ù…Ø³Ø¬Ù„ â€” Ø¯Ø§Ù„Ø© Ø¢Ù…Ù†Ø© Ù„Ù„Ø²Ø§Ø¦Ø±
+-- Ø¨ØªØ±Ø¬Ø¹ 26 Ù„Ùˆ Ø§Ù„Ø£ÙŠÙ…ÙŠÙ„ Ù…Ø§ Ø¹Ù†Ø¯Ù‡ÙˆØ´ Ø·Ù„Ø¨Ø§Øª Ù‚Ø¨Ù„Ù‡ (ØºÙŠØ± Ù…Ù„ØºÙŠ) Ùˆ 0 ØºÙŠØ± ÙƒØ¯Ù‡
 -- ============================================================
 create or replace function public.first_order_discount(p_email text)
 returns numeric
@@ -207,7 +207,7 @@ language sql security definer stable as $$
     when exists (
       select 1 from public.orders
       where lower(email) = lower(btrim(p_email))
-        and status is distinct from 'ملغي'
+        and status is distinct from 'Ù…Ù„ØºÙŠ'
     ) then 0
     else 26
   end;
@@ -217,9 +217,9 @@ revoke all on function public.first_order_discount(text) from public;
 grant execute on function public.first_order_discount(text) to anon, authenticated;
 
 -- ============================================================
--- طلبات العميل (قائمة الأوردرات بالبريد) — دالة آمنة للزائر
--- بترجع طلبات العميل باسمه والمنتجات والإجمالي والحالة بس
--- (من غير موبايل/عنوان كامل لتقليل التعرض)
+-- Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„ (Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø£ÙˆØ±Ø¯Ø±Ø§Øª Ø¨Ø§Ù„Ø¨Ø±ÙŠØ¯) â€” Ø¯Ø§Ù„Ø© Ø¢Ù…Ù†Ø© Ù„Ù„Ø²Ø§Ø¦Ø±
+-- Ø¨ØªØ±Ø¬Ø¹ Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨Ø§Ø³Ù…Ù‡ ÙˆØ§Ù„Ù…Ù†ØªØ¬Ø§Øª ÙˆØ§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ ÙˆØ§Ù„Ø­Ø§Ù„Ø© Ø¨Ø³
+-- (Ù…Ù† ØºÙŠØ± Ù…ÙˆØ¨Ø§ÙŠÙ„/Ø¹Ù†ÙˆØ§Ù† ÙƒØ§Ù…Ù„ Ù„ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„ØªØ¹Ø±Ø¶)
 -- ============================================================
 create or replace function public.my_orders(p_email text)
 returns table (
@@ -270,9 +270,9 @@ revoke all on function public.track_order(text) from public;
 grant execute on function public.track_order(text) to anon, authenticated;
 
 -- ============================================================
--- محادثة الطلب (order_messages) — رسايل عبر الموقع بالاتجاهين
--- العميل (anon) يبعت ويقرا برقم الطلب عبر دالة آمنة،
--- وصاحب المتجر (authenticated) يقرا ويكتب مباشرة
+-- Ù…Ø­Ø§Ø¯Ø«Ø© Ø§Ù„Ø·Ù„Ø¨ (order_messages) â€” Ø±Ø³Ø§ÙŠÙ„ Ø¹Ø¨Ø± Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø¨Ø§Ù„Ø§ØªØ¬Ø§Ù‡ÙŠÙ†
+-- Ø§Ù„Ø¹Ù…ÙŠÙ„ (anon) ÙŠØ¨Ø¹Øª ÙˆÙŠÙ‚Ø±Ø§ Ø¨Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨ Ø¹Ø¨Ø± Ø¯Ø§Ù„Ø© Ø¢Ù…Ù†Ø©ØŒ
+-- ÙˆØµØ§Ø­Ø¨ Ø§Ù„Ù…ØªØ¬Ø± (authenticated) ÙŠÙ‚Ø±Ø§ ÙˆÙŠÙƒØªØ¨ Ù…Ø¨Ø§Ø´Ø±Ø©
 -- ============================================================
 create table if not exists public.order_messages (
   id uuid primary key default gen_random_uuid(),
@@ -285,12 +285,12 @@ create table if not exists public.order_messages (
 
 alter table public.order_messages enable row level security;
 
--- أي شخص يبعت رسالة على طلب (العميل)
+-- Ø£ÙŠ Ø´Ø®Øµ ÙŠØ¨Ø¹Øª Ø±Ø³Ø§Ù„Ø© Ø¹Ù„Ù‰ Ø·Ù„Ø¨ (Ø§Ù„Ø¹Ù…ÙŠÙ„)
 drop policy if exists "anyone can insert order_messages" on public.order_messages;
 create policy "anyone can insert order_messages" on public.order_messages
   for insert with check (true);
 
--- صاحب المتجر المسجل يقرا ويعدل (شوف/حذف) رسايل
+-- ØµØ§Ø­Ø¨ Ø§Ù„Ù…ØªØ¬Ø± Ø§Ù„Ù…Ø³Ø¬Ù„ ÙŠÙ‚Ø±Ø§ ÙˆÙŠØ¹Ø¯Ù„ (Ø´ÙˆÙ/Ø­Ø°Ù) Ø±Ø³Ø§ÙŠÙ„
 drop policy if exists "auth can manage order_messages" on public.order_messages;
 create policy "auth can manage order_messages" on public.order_messages
   for all using (auth.uid() is not null) with check (auth.uid() is not null);
@@ -299,7 +299,7 @@ grant select, insert, update, delete on table public.order_messages to anon, aut
 
 create index if not exists order_messages_order_idx on public.order_messages (order_id, created_at asc);
 
--- قراءة رسايل طلب معين بأمان للزائر العادي (بيسكسل ترابط RLS)
+-- Ù‚Ø±Ø§Ø¡Ø© Ø±Ø³Ø§ÙŠÙ„ Ø·Ù„Ø¨ Ù…Ø¹ÙŠÙ† Ø¨Ø£Ù…Ø§Ù† Ù„Ù„Ø²Ø§Ø¦Ø± Ø§Ù„Ø¹Ø§Ø¯ÙŠ (Ø¨ÙŠØ³ÙƒØ³Ù„ ØªØ±Ø§Ø¨Ø· RLS)
 create or replace function public.order_messages_for(p_order_id text)
 returns table (
   id uuid,
@@ -319,7 +319,7 @@ $$;
 revoke all on function public.order_messages_for(text) from public;
 grant execute on function public.order_messages_for(text) to anon, authenticated;
 
--- طلبات العميل بالرقم (من غير ما يكتب رقم الطلب) + تسجيل مصدر الزيارة
+-- Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨Ø§Ù„Ø±Ù‚Ù… (Ù…Ù† ØºÙŠØ± Ù…Ø§ ÙŠÙƒØªØ¨ Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨) + ØªØ³Ø¬ÙŠÙ„ Ù…ØµØ¯Ø± Ø§Ù„Ø²ÙŠØ§Ø±Ø©
 create or replace function public.orders_by_phone(p_phone text)
 returns setof public.orders
 language sql security definer stable set search_path = public as $$
@@ -345,3 +345,18 @@ $$;
 
 revoke all on function public.set_order_source(text, text) from public;
 grant execute on function public.set_order_source(text, text) to anon, authenticated;
+
+-- لينك شخصي للعميل: توكن من الموبايل يفتح كل طلباته من غير كتابة
+create or replace function public.orders_by_token(p_token text)
+returns setof public.orders
+language sql security definer stable set search_path = public as $$
+  select *
+  from public.orders o
+  where encode(sha256(convert_to('vanilliano|' || regexp_replace(coalesce(o.phone, ''), '\D', '', 'g'), 'UTF8')), 'hex') = lower(coalesce(p_token, ''))
+  order by o.created_at desc;
+$$;
+
+revoke all on function public.orders_by_token(text) from public;
+grant execute on function public.orders_by_token(text) to anon, authenticated;
+
+

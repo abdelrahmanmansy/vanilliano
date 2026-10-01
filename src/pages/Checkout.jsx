@@ -13,6 +13,7 @@ import {
   Banknote,
   Smartphone,
   PackageSearch,
+  ListOrdered,
 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { supabaseService } from '../services/supabase'
@@ -35,6 +36,7 @@ import Button from '../components/ui/Button'
 import Breadcrumbs from '../components/ui/Breadcrumbs'
 import EmptyState from '../components/ui/EmptyState'
 import { detectOrderSource } from '../utils/source'
+import { phoneToken } from '../utils/token'
 import { toast } from 'react-hot-toast'
 
 const cities = [
@@ -155,7 +157,7 @@ export default function Checkout() {
     setCoupon(result)
   }
 
-  const buildMessage = (items, orderTotal, orderShipping, orderDiscount, orderId) => {
+  const buildMessage = (items, orderTotal, orderShipping, orderDiscount, orderId, token = '') => {
     const paymentLabel = {
       instapay: `انستا باي (${PAYMENT.instapayDisplay})`,
       vodafone: `فودافون كاش (${PAYMENT.vodafoneCashDisplay})`,
@@ -205,8 +207,13 @@ export default function Checkout() {
       `🌐 الموقع: ${STORE.domain}`,
       'الرجاء تأكيد توفر الطلب وموعد التوصيل.',
       '',
-      `📍 لمتابعة طلبك ومعرفة مكانه وموعد وصوله: ${siteURL}/track?order=${orderId}&ref=wa`,
+      `📍 لمتابعة طلبك ومعرفة مكانه وموعد وصوله: ${siteURL}/track?order=${orderId}&ref=wa${token ? `&c=${token}` : ''}`,
     )
+    if (token) {
+      lines.push(
+        `🧾 كل طلباتك على طول (من غير ما تدخل رقم الطلب): ${siteURL}/track?c=${token}&ref=wa`,
+      )
+    }
     return lines.join('\n')
   }
 
@@ -250,7 +257,7 @@ export default function Checkout() {
     return order
   }
 
-  const handlePlaceOrder = (viaWhatsApp = true) => {
+  const handlePlaceOrder = async (viaWhatsApp = true) => {
     const next = validate()
     setErrors(next)
     if (Object.keys(next).length > 0) {
@@ -258,7 +265,23 @@ export default function Checkout() {
       return
     }
     const order = saveOrder()
-    const message = buildMessage(order.items, order.total, order.shipping, order.discount, order.id)
+    const token = await phoneToken(order.shippingInfo?.phone)
+    if (token) {
+      try {
+        window.localStorage.setItem('vanilliano_token', token)
+      } catch {
+        /* ignore */
+      }
+      order.token = token
+    }
+    const message = buildMessage(
+      order.items,
+      order.total,
+      order.shipping,
+      order.discount,
+      order.id,
+      token,
+    )
     setPlacing(true)
     setTimeout(() => {
       clearCart()
@@ -346,11 +369,20 @@ export default function Checkout() {
                   : 'أرسل التفاصيل عبر واتساب'}
               </Button>
             </a>
-            <Link to={`/track?order=${placedOrder.id}`}>
+            <Link
+              to={`/track?order=${placedOrder.id}${placedOrder.token ? `&c=${placedOrder.token}` : ''}`}
+            >
               <Button size="lg" variant="outline" icon={PackageSearch}>
                 تابع طلبك وصل لفين
               </Button>
             </Link>
+            {placedOrder.token && (
+              <Link to={`/track?c=${placedOrder.token}&ref=site`}>
+                <Button size="lg" variant="ghost" icon={ListOrdered}>
+                  كل طلباتي (من غير رقم طلب)
+                </Button>
+              </Link>
+            )}
             <Link to="/products">
               <Button size="lg">متابعة التسوق</Button>
             </Link>

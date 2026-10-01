@@ -49,6 +49,12 @@ export const supabaseService = {
     return { data: data || [], error }
   },
 
+  async getOrdersByToken(token) {
+    if (!client || !token) return { data: [], error: null }
+    const { data, error } = await client.rpc('orders_by_token', { p_token: String(token) })
+    return { data: data || [], error }
+  },
+
   async setOrderSource(id, source) {
     if (!client || !id || !source) return
     try {
