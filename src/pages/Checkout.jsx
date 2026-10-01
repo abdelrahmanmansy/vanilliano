@@ -452,7 +452,7 @@ export default function Checkout() {
                 <input
                   value={form.name}
                   onChange={(e) => setField('name', e.target.value)}
-                  placeholder="اسمك الكريم"
+                  placeholder="الاسم بالكامل"
                   className={inputClass(errors.name)}
                 />
                 {errors.name && (

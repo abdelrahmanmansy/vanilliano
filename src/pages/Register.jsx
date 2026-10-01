@@ -105,7 +105,7 @@ export default function Register() {
                 <input
                   value={form.name}
                   onChange={(e) => setField('name', e.target.value)}
-                  placeholder="اسمك الكريم"
+                  placeholder="الاسم بالكامل"
                   className={inputClass(errors.name)}
                 />
               </div>
