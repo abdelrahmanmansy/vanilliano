@@ -24,8 +24,9 @@ const loaded = await qr.evaluate((img) => img.complete && img.naturalWidth > 0).
 console.log('2) صورة انستا اتحملت فعلاً؟', loaded ? 'نعم ✅' : 'لا ❌')
 const src = await qr.getAttribute('src').catch(() => '')
 console.log('3) صورة انستا هي الأصلية (حجمها المبني أقل من 40KB)؟', src.includes('instapay') ? 'نعم ✅ (من src/assets)' : 'لا ❌: ' + src)
-const openBtn = page.locator('a[href="https://ipn.eg/"]')
+const openBtn = page.locator('a[href*="instapay.eg"], a[href*="ipn.eg/S/"]')
 console.log('4) زرار «فتح تطبيق انستا باي» موجود؟', (await openBtn.count()) > 0 ? 'نعم ✅' : 'لا ❌')
+console.log('   رابطه:', await openBtn.first().getAttribute('href'))
 
 // اختيار فودافون كاش → يظهر كود فودافون ويختفي كود انستا
 const voda = page.locator('button:has-text("فودافون كاش Vodafone Cash")').first()

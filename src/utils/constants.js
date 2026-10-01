@@ -23,6 +23,10 @@ export const STORE = {
 export const PAYMENT = {
   instapay: '01111846842',
   instapayDisplay: '\u200E0111 1846 842',
+  // لينك الاستقبال الحقيقي بتاعك من تطبيق InstaPay (IPA -> مشاركة/لينك)
+  // شكله: https://ipn.eg/S/<اسمالحساب>/instapay/<الكود>
+  // لو فاضي: الزر هيفتح الموقع الرسمي بدل ما يدي رسالة «رابط غير صحيح».
+  instapayLink: '',
   vodafoneCash: '01009942440',
   vodafoneCashDisplay: '\u200E010 0994 2440',
 }

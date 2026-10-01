@@ -703,14 +703,19 @@ export default function Checkout() {
                   أو حوّل على: {PAYMENT.instapayDisplay}
                 </p>
                 <a
-                  href="https://ipn.eg/"
+                  href={PAYMENT.instapayLink || 'https://www.instapay.eg'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-burgundy-700 px-5 py-2.5 text-sm font-black text-white transition-all duration-300 hover:bg-burgundy-800 active:scale-[0.98]"
                 >
                   <Smartphone size={16} />
-                  فتح تطبيق انستا باي
+                  {PAYMENT.instapayLink ? 'افتح انستا باي وحوّل دلوقتي' : 'حمّل تطبيق انستا باي'}
                 </a>
+                <p className="text-[11px] text-burgundy-900/40">
+                  {PAYMENT.instapayLink
+                    ? 'التطبيق هيفتح مملوء برقمك — اكتب المبلغ وكمّل.'
+                    : 'أو حمّل التطبيق من المتجر وحوّل على الرقم اللي فوق.'}
+                </p>
               </div>
             )}
 
