@@ -38,6 +38,7 @@ import EmptyState from '../components/ui/EmptyState'
 import { detectOrderSource } from '../utils/source'
 import { phoneToken } from '../utils/token'
 import { siteUrl } from '../utils/asset'
+import WALLETS, { openWallet } from '../utils/wallet'
 import { toast } from 'react-hot-toast'
 
 const cities = [
@@ -689,48 +690,54 @@ export default function Checkout() {
               ))}
             </div>
 
-            {payment === 'instapay' && (
-              <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-vanilla-100 bg-cream-50 p-4 text-center">
-                <img
-                  src={instapayQr}
-                  alt="كود QR لانستا باي"
-                  className="h-44 w-44 rounded-2xl bg-white object-contain p-2 shadow-sm"
-                />
-                <p className="text-xs font-black text-burgundy-950">
-                  امسح الكود بالتطبيق لتحويل المبلغ مباشرة
+            {(payment === 'instapay' || payment === 'vodafone') && (
+              <div className="mt-4 rounded-2xl border border-vanilla-100 bg-cream-50 p-4 text-center">
+                <p className="mb-3 text-sm font-black text-burgundy-950">
+                  حوّل المبلغ — اختار محفظتك اللي تحب:
                 </p>
-                <p className="text-[11px] text-burgundy-900/50">
-                  أو حوّل على: {PAYMENT.instapayDisplay}
-                </p>
-                <a
-                  href={PAYMENT.instapayLink || 'https://www.instapay.eg'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-burgundy-700 px-5 py-2.5 text-sm font-black text-white transition-all duration-300 hover:bg-burgundy-800 active:scale-[0.98]"
-                >
-                  <Smartphone size={16} />
-                  {PAYMENT.instapayLink ? 'افتح انستا باي وحوّل دلوقتي' : 'حمّل تطبيق انستا باي'}
-                </a>
-                <p className="text-[11px] text-burgundy-900/40">
-                  {PAYMENT.instapayLink
-                    ? 'التطبيق هيفتح مملوء برقمك — اكتب المبلغ وكمّل.'
-                    : 'أو حمّل التطبيق من المتجر وحوّل على الرقم اللي فوق.'}
-                </p>
-              </div>
-            )}
 
-            {payment === 'vodafone' && (
-              <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-vanilla-100 bg-cream-50 p-4 text-center">
                 <img
-                  src={vodafoneQr}
-                  alt="كود QR لفودافون كاش"
-                  className="h-44 w-44 rounded-2xl bg-white object-contain p-2 shadow-sm"
+                  src={payment === 'instapay' ? instapayQr : vodafoneQr}
+                  alt={`كود QR لـ ${payment === 'instapay' ? 'انستا باي' : 'فودافون كاش'}`}
+                  className="mx-auto h-40 w-40 rounded-2xl bg-white object-contain p-2 shadow-sm"
                 />
-                <p className="text-xs font-black text-burgundy-950">
-                  امسح الكود بالتطبيق لتحويل المبلغ مباشرة
-                </p>
-                <p className="text-[11px] text-burgundy-900/50">
-                  أو حوّل على: {PAYMENT.vodafoneCashDisplay}
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {WALLETS.map((wallet) => (
+                    <button
+                      key={wallet.id}
+                      type="button"
+                      onClick={() => openWallet(wallet.id)}
+                      className="flex items-center justify-center gap-2 rounded-2xl border-2 border-vanilla-200 bg-white px-3 py-3 text-xs font-black text-burgundy-950 transition-all hover:border-burgundy-300 hover:bg-vanilla-50 active:scale-[0.97]"
+                    >
+                      <span className="text-lg">{wallet.emoji}</span>
+                      {wallet.name}
+                    </button>
+                  ))}
+                </div>
+
+                {PAYMENT.instapayLink && (
+                  <a
+                    href={PAYMENT.instapayLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-burgundy-700 px-5 py-2.5 text-sm font-black text-white transition-all duration-300 hover:bg-burgundy-800 active:scale-[0.98]"
+                  >
+                    <Smartphone size={16} />
+                    افتح انستا باي وحوّل دلوقتي
+                  </a>
+                )}
+
+                <p className="mt-3 text-[11px] text-burgundy-900/50">
+                  المبلغ المحسوب:{' '}
+                  <b className="font-black text-burgundy-950">
+                    {formatPrice(orderTotal)} ج.م
+                  </b>
+                  {' · '}
+                  حوّل على:{' '}
+                  <b dir="ltr" className="font-black text-burgundy-950">
+                    {payment === 'instapay' ? PAYMENT.instapayDisplay : PAYMENT.vodafoneCashDisplay}
+                  </b>
                 </p>
               </div>
             )}

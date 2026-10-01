@@ -31,6 +31,61 @@ export const PAYMENT = {
   vodafoneCashDisplay: '\u200E010 0994 2440',
 }
 
+// المحافظ الإلكترونية في مصر — كل واحد بيفتح محفظته أو تطبيق بنكه
+export const WALLETS = [
+  {
+    id: 'vodafone',
+    name: 'فودافون كاش',
+    emoji: '🔴',
+    color: '#e60000',
+    phone: '01009942440',
+    phoneDisplay: '0100 994 2440',
+    // Vodafone Cash universal link: بيفتح المحفظة لو مش متثبتة بيفتح المتجر
+    app: 'market://details?id=com.vodafone.vodafonecash',
+    web: 'https://www.vodafone.com.eg/vodafone-cash',
+  },
+  {
+    id: 'orange',
+    name: 'محفظة أورنج',
+    emoji: '🟠',
+    color: '#ff7900',
+    phone: '01009942440',
+    phoneDisplay: '0100 994 2440',
+    app: 'market://details?id=com.orange.mwallet.eg',
+    web: 'https://www.orange.eg/en/mobile-money',
+  },
+  {
+    id: 'etisalat',
+    name: 'محفظة اتصالات كاش',
+    emoji: '🟢',
+    color: '#8cc63f',
+    phone: '01009942440',
+    phoneDisplay: '0100 994 2440',
+    app: 'market://details?id=com.etisalat.wallet.eg',
+    web: 'https://www.etisalat.eg/en/consumer/ecash',
+  },
+  {
+    id: 'we',
+    name: 'محفظة وي',
+    emoji: '🟣',
+    color: '#6a1b9a',
+    phone: '01009942440',
+    phoneDisplay: '0100 994 2440',
+    app: 'market://details?id=aramexplus.eg',
+    web: 'https://www.aramexplus.com/',
+  },
+  {
+    id: 'instapay',
+    name: 'انستا باي',
+    emoji: '🟣',
+    color: '#5b21b6',
+    phone: '01111846842',
+    phoneDisplay: '0111 1846 842',
+    app: '',
+    web: 'https://www.instapay.eg',
+  },
+]
+
 export const WHATSAPP_LINK = (text = '') =>
   `https://wa.me/${STORE.whatsapp}${text ? `?text=${encodeURIComponent(text)}` : ''}`
 
