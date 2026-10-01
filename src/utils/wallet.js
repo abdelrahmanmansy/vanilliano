@@ -33,47 +33,20 @@ export const walletTarget = (wallet, platform) => {
   return wallet.ios || wallet.install || wallet.web
 }
 
-// بنجرّب كذا رابط ورا بعض: أول واحد يفتح التطبيق بيوقف الباقي.
-// لو المتصفح رفض كلهم، الصفحة هتفضل ظاهرة ونوديه للمتجر.
-const openWithFallbacks = (targets, fallback) => {
-  let index = 0
+// لو فتح التطبيق، الصفحة هتختفي (visibilitychange).
+// لو رفض المتصفح، بعد 2.5 ثانية نوديه للمتجر.
+const openApp = (target, fallback) => {
   let opened = false
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') opened = true
   })
 
-  const tryNext = () => {
-    if (opened || index >= targets.length) {
-      if (!opened) window.location.href = fallback
-      return
-    }
+  setTimeout(() => {
+    if (!opened) window.location.href = fallback
+  }, 2500)
 
-    // المتصفح غالباً بيرفض custom scheme في بعض البيئات،
-    // فبنجرب ب invisible iframe كمان قبل ما نستسلم
-    const target = targets[index++]
-
-    if (target.startsWith('intent://')) {
-      window.location.href = target
-      setTimeout(tryNext, 2500)
-      return
-    }
-
-    const frame = document.createElement('iframe')
-    frame.style.display = 'none'
-    frame.src = target
-    frame.onerror = () => frame.remove()
-    document.body.appendChild(frame)
-    setTimeout(() => {
-      frame.remove()
-      tryNext()
-    }, 1200)
-
-    window.location.href = target
-    setTimeout(tryNext, 2500)
-  }
-
-  tryNext()
+  window.location.href = target
 }
 
 export const openWallet = (walletId) => {
@@ -92,12 +65,7 @@ export const openWallet = (walletId) => {
     return
   }
 
-  //Scheme الخاص بالتطبيق أول حاجة (لو مسجّل)، بعدين intent، بعدين لينك مُسجَّل
-  const targets = []
-  if (wallet.schemeScheme) targets.push(wallet.schemeScheme)
-  targets.push(target)
-
-  openWithFallbacks(targets.filter(Boolean), fallback)
+  openApp(target, fallback)
 }
 
 // أي رابط IPA حقيقي بيفتح تطبيق انستا باي على الموبايل — نستخدمه بدل المتجر
