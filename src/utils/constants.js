@@ -31,7 +31,9 @@ export const PAYMENT = {
   vodafoneCashDisplay: '\u200E010 0994 2440',
 }
 
-// المحافظ الإلكترونية في مصر — كل واحد بيفتح محفظته أو تطبيق بنكه
+// المحافظ الإلكترونية في مصر — الزر بيفتح تطبيق المحفظة على الموبايل مباشرة
+// pkg = اسم التطبيق الرسمي في جوجل بلاي (متحقق منه)
+// install = صفحة المتجر لو التطبيق مش مثبّت | web = الموقع الرسمي
 export const WALLETS = [
   {
     id: 'vodafone',
@@ -40,8 +42,8 @@ export const WALLETS = [
     color: '#e60000',
     phone: '01009942440',
     phoneDisplay: '0100 994 2440',
-    // Vodafone Cash universal link: بيفتح المحفظة لو مش متثبتة بيفتح المتجر
-    app: 'market://details?id=com.vodafone.vodafonecash',
+    pkg: 'com.vodafone.spoc',
+    install: 'https://play.google.com/store/apps/details?id=com.vodafone.spoc',
     web: 'https://www.vodafone.com.eg/vodafone-cash',
   },
   {
@@ -51,8 +53,10 @@ export const WALLETS = [
     color: '#ff7900',
     phone: '01009942440',
     phoneDisplay: '0100 994 2440',
-    app: 'market://details?id=com.orange.mwallet.eg',
-    web: 'https://www.orange.eg/en/mobile-money',
+    pkg: 'com.orange.orangemoney_customer',
+    install:
+      'https://play.google.com/store/apps/details?id=com.orange.orangemoney_customer',
+    web: 'https://www.orange.eg/ar/mobile-money',
   },
   {
     id: 'etisalat',
@@ -61,8 +65,9 @@ export const WALLETS = [
     color: '#8cc63f',
     phone: '01009942440',
     phoneDisplay: '0100 994 2440',
-    app: 'market://details?id=com.etisalat.wallet.eg',
-    web: 'https://www.etisalat.eg/en/consumer/ecash',
+    pkg: 'com.etisalat.flous',
+    install: 'https://play.google.com/store/apps/details?id=com.etisalat.flous',
+    web: 'https://www.etisalat.eg/ar/consumer/ecash',
   },
   {
     id: 'we',
@@ -71,8 +76,10 @@ export const WALLETS = [
     color: '#6a1b9a',
     phone: '01009942440',
     phoneDisplay: '0100 994 2440',
-    app: 'market://details?id=aramexplus.eg',
-    web: 'https://www.aramexplus.com/',
+    pkg: 'com.TE.WEWallet',
+    install: 'https://play.google.com/store/apps/details?id=com.TE.WEWallet',
+    ios: 'https://apps.apple.com/eg/app/we-pay-eg/id1485158275',
+    web: 'https://we.eg/ar',
   },
   {
     id: 'instapay',
@@ -81,7 +88,12 @@ export const WALLETS = [
     color: '#5b21b6',
     phone: '01111846842',
     phoneDisplay: '0111 1846 842',
-    app: '',
+    pkg: 'com.egyptianbanks.instapay',
+    install:
+      'https://play.google.com/store/apps/details?id=com.egyptianbanks.instapay',
+    ios: 'https://apps.apple.com/eg/app/instapay-egypt/id1592108795',
+    // لينك الاستقبال الحقيقي (ipn.eg/S/...) بيفتح تطبيق انستا باي على الموبايل
+    scheme: PAYMENT.instapayLink || '',
     web: 'https://www.instapay.eg',
   },
 ]
