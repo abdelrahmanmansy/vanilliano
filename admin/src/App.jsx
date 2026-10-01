@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { client, adminService } from './adminService'
 import { categories as CATEGORIES } from '../../src/data/categories'
-import { calculateDiscount, formatPrice } from '../../src/utils/format'
+import { calculateDiscount, formatPrice, digitsOnly } from '../../src/utils/format'
 import { phoneToken } from '../../src/utils/token'
 import { siteUrl } from '../../src/utils/asset'
 
@@ -1211,7 +1211,18 @@ function PurchaseForm({ products, onSave, onCancel }) {
         </div>
         <div className="field">
           <label>جوال العميل</label>
-          <input dir="ltr" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input
+            dir="ltr"
+            inputMode="numeric"
+            autoComplete="tel"
+            value={phone}
+            onChange={(e) => setPhone(digitsOnly(e.target.value))}
+            onPaste={(e) => {
+              e.preventDefault()
+              const text = (e.clipboardData || window.clipboardData).getData('text')
+              setPhone(digitsOnly(phone + text))
+            }}
+          />
         </div>
         <div className="field">
           <label>طريقة الدفع</label>

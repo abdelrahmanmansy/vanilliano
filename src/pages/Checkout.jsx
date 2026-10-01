@@ -18,7 +18,7 @@ import {
 import { useCart } from '../context/CartContext'
 import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
-import { formatPrice } from '../utils/format'
+import { formatPrice, digitsOnly } from '../utils/format'
 import instapayQr from '../assets/instapay-qr.jpg'
 import vodafoneQr from '../assets/vodafone-qr.jpg'
 import { validateCoupon } from '../data/coupons'
@@ -472,8 +472,15 @@ export default function Checkout() {
                   />
                   <input
                     dir="ltr"
+                    inputMode="numeric"
+                    autoComplete="tel"
                     value={form.phone}
-                    onChange={(e) => setField('phone', e.target.value)}
+                    onChange={(e) => setField('phone', digitsOnly(e.target.value))}
+                    onPaste={(e) => {
+                      e.preventDefault()
+                      const text = (e.clipboardData || window.clipboardData).getData('text')
+                      setField('phone', digitsOnly(form.phone + text))
+                    }}
                     placeholder="01xxxxxxxxx"
                     className={`${inputClass(errors.phone)} py-3 pl-4 pr-11`}
                     style={{ textAlign: 'right' }}

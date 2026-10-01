@@ -11,6 +11,7 @@ import {
 import Breadcrumbs from '../components/ui/Breadcrumbs'
 import Button from '../components/ui/Button'
 import { EMAIL_REGEX, PHONE_REGEX, STORE, WHATSAPP_LINK } from '../utils/constants'
+import { digitsOnly } from '../utils/format'
 import { supabaseService } from '../services/supabase'
 import { toast } from 'react-hot-toast'
 
@@ -213,8 +214,15 @@ export default function Contact() {
                 </label>
                 <input
                   dir="ltr"
+                  inputMode="numeric"
+                  autoComplete="tel"
                   value={form.phone}
-                  onChange={(e) => setField('phone', e.target.value)}
+                  onChange={(e) => setField('phone', digitsOnly(e.target.value))}
+                  onPaste={(e) => {
+                    e.preventDefault()
+                    const text = (e.clipboardData || window.clipboardData).getData('text')
+                    setField('phone', digitsOnly(form.phone + text))
+                  }}
                   placeholder="01xxxxxxxxx"
                   className={inputClass(errors.phone)}
                   style={{ textAlign: 'right' }}

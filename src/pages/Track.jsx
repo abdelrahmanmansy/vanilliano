@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { PackageSearch, Loader2 } from 'lucide-react'
 import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
-import { formatPrice, formatDate } from '../utils/format'
+import { formatPrice, formatDate, digitsOnly } from '../utils/format'
 import { STORAGE_KEYS } from '../utils/constants'
 import { detectOrderSource } from '../utils/source'
 import { phoneToken } from '../utils/token'
@@ -375,7 +375,14 @@ export default function Track() {
               >
                 <input
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(digitsOnly(e.target.value))}
+                  onPaste={(e) => {
+                    e.preventDefault()
+                    const text = (e.clipboardData || window.clipboardData).getData('text')
+                    setPhone(digitsOnly(phone + text))
+                  }}
+                  inputMode="numeric"
+                  autoComplete="tel"
                   placeholder="رقم الموبايل (مثال 01012345678)"
                   dir="ltr"
                   className="w-full rounded-2xl border border-vanilla-200 bg-white px-4 py-3 text-sm font-bold text-right text-burgundy-950 outline-none transition-colors focus:border-burgundy-400"

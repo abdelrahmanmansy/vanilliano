@@ -38,3 +38,18 @@ export function slugify(text) {
 export function scrollToTop(behavior = 'smooth') {
   window.scrollTo({ top: 0, behavior })
 }
+
+// ٠١٢ (عربي) و ۰۱۲ (فارسي) → 012 إنجليزي
+const ARABIC_DIGITS = /[\u0660-\u0669\u06F0-\u06F9]/g
+
+export function normalizeDigits(value = '') {
+  return String(value).replace(ARABIC_DIGITS, (d) => {
+    const code = d.charCodeAt(0)
+    return String(code >= 0x06f0 ? code - 0x06f0 : code - 0x0660)
+  })
+}
+
+// حقل الموبايل: أرقام بس (إنجليزي/عربي) — أي حرف أو رمز أو كلام يتمسح
+export function digitsOnly(value = '') {
+  return normalizeDigits(value).replace(/[^\d]/g, '')
+}
