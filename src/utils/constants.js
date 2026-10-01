@@ -100,6 +100,8 @@ export const WALLETS = [
     // آيفون: نطاق ipn.eg مُسجَّل رسمياً، لكن لازم لينك استقبال حقيقي
     // (ipn.eg/S/الاسم/instapay/الكود) — أي رابط تاني التطبيق بيرفضه.
     appLink: PAYMENT.instapayLink || '',
+    // scheme الخاص بالتطبيق: ipn:// — بيفتح التطبيق لوحده على أي جهاز
+    schemeScheme: 'ipn://',
     // لينك الاستقبال الحقيقي (ipn.eg/S/.../instapay/CODE) بيحبّي المبلغ جوه التطبيق
     scheme: PAYMENT.instapayLink || '',
     web: 'https://www.instapay.eg',

@@ -33,24 +33,47 @@ export const walletTarget = (wallet, platform) => {
   return wallet.ios || wallet.install || wallet.web
 }
 
-// بنفتح رابط مُسجَّل أو لينك استقبال: لو التطبيق مثبّت المتصفح هيفتحه
-// على طول (بيحصل visibilitychange). لو مش مثبّت أو رفض، نوديه للمتجر.
-const openVerified = (target, fallback) => {
-  let done = false
-
-  const timer = setTimeout(() => {
-    if (done) return
-    window.location.href = fallback
-  }, 2500)
+// بنجرّب كذا رابط ورا بعض: أول واحد يفتح التطبيق بيوقف الباقي.
+// لو المتصفح رفض كلهم، الصفحة هتفضل ظاهرة ونوديه للمتجر.
+const openWithFallbacks = (targets, fallback) => {
+  let index = 0
+  let opened = false
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-      done = true
-      clearTimeout(timer)
-    }
+    if (document.visibilityState === 'hidden') opened = true
   })
 
-  window.location.href = target
+  const tryNext = () => {
+    if (opened || index >= targets.length) {
+      if (!opened) window.location.href = fallback
+      return
+    }
+
+    // المتصفح غالباً بيرفض custom scheme في بعض البيئات،
+    // فبنجرب ب invisible iframe كمان قبل ما نستسلم
+    const target = targets[index++]
+
+    if (target.startsWith('intent://')) {
+      window.location.href = target
+      setTimeout(tryNext, 2500)
+      return
+    }
+
+    const frame = document.createElement('iframe')
+    frame.style.display = 'none'
+    frame.src = target
+    frame.onerror = () => frame.remove()
+    document.body.appendChild(frame)
+    setTimeout(() => {
+      frame.remove()
+      tryNext()
+    }, 1200)
+
+    window.location.href = target
+    setTimeout(tryNext, 2500)
+  }
+
+  tryNext()
 }
 
 export const openWallet = (walletId) => {
@@ -69,7 +92,12 @@ export const openWallet = (walletId) => {
     return
   }
 
-  openVerified(target, fallback)
+  //Scheme الخاص بالتطبيق أول حاجة (لو مسجّل)، بعدين intent، بعدين لينك مُسجَّل
+  const targets = []
+  if (wallet.schemeScheme) targets.push(wallet.schemeScheme)
+  targets.push(target)
+
+  openWithFallbacks(targets.filter(Boolean), fallback)
 }
 
 // أي رابط IPA حقيقي بيفتح تطبيق انستا باي على الموبايل — نستخدمه بدل المتجر
