@@ -97,9 +97,9 @@ export const WALLETS = [
     install:
       'https://play.google.com/store/apps/details?id=com.egyptianbanks.instapay',
     ios: 'https://apps.apple.com/eg/app/instapay-egypt/id1592108795',
-    // نطاق ipn.eg مُسجَّل رسمياً في assetlinks.json و apple-app-site-association،
-    // فأي رابط عليه بيقفل تطبيق انستا باي على أندرويد وآيفون.
-    appLink: 'https://ipn.eg/S/',
+    // آيفون: نطاق ipn.eg مُسجَّل رسمياً، لكن لازم لينك استقبال حقيقي
+    // (ipn.eg/S/الاسم/instapay/الكود) — أي رابط تاني التطبيق بيرفضه.
+    appLink: PAYMENT.instapayLink || '',
     // لينك الاستقبال الحقيقي (ipn.eg/S/.../instapay/CODE) بيحبّي المبلغ جوه التطبيق
     scheme: PAYMENT.instapayLink || '',
     web: 'https://www.instapay.eg',

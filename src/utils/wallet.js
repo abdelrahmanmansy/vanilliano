@@ -13,27 +13,28 @@ export const walletTarget = (wallet, platform) => {
   // لينك الاستقبال الحقيقي (ipn.eg/S/...) بيفتح التطبيق والمبلغ متعبّى
   if (wallet.scheme && platform !== 'desktop') return wallet.scheme
 
-  // نطاق مُسجَّل رسمياً للتطبيق (App Links / Universal Links):
-  // أي رابط عليه بيقفل التطبيق لوحده على أندرويد وآيفون.
-  if (wallet.appLink && platform !== 'desktop') return wallet.appLink
-
-  // أندرويد: intent بيفتح التطبيق المثبّت على طول، ولو مش مثبّت بيفتح المتجر
+  // أندرويد: intent بيفتح التطبيق المثبّت على طول من غير أي بيانات،
+  // ولو مش مثبّت بيفتح المتجر. ده الطريقة المضمونة لفتح التطبيق فقط.
   if (platform === 'android') {
     const fallback = wallet.install || wallet.web
     return (
-      'intent://#Intent;' +
+      'intent://#Intent;action=android.intent.action.VIEW;' +
       (wallet.pkg ? `package=${wallet.pkg};` : '') +
       `S.browser_fallback_url=${encodeURIComponent(fallback)};end`
     )
   }
 
+  // نطاق مُسجَّل رسمياً للتطبيق — بيفتحه على آيفون (Universal Links).
+  // لازم يكون لينك استقبال حقيقي، وإلا التطبيق هيقول «رابط غير صحيح».
+  if (wallet.appLink && platform === 'ios') return wallet.appLink
+
   // آيفون: المتصفح مش بيسمح لأي موقع يفتح تطبيق تاني مثبّت
   return wallet.ios || wallet.install || wallet.web
 }
 
-// بنفتح رابط نطاق مُسجَّل: لو التطبيق مثبّت المتصفح هيفتحه على طول
-// (بيحصل visibilitychange). لو مش مثبّت، الصفحة هتفضل ظاهرة ونوديه للمتجر.
-const openAppLink = (target, fallback) => {
+// بنفتح رابط مُسجَّل أو لينك استقبال: لو التطبيق مثبّت المتصفح هيفتحه
+// على طول (بيحصل visibilitychange). لو مش مثبّت أو رفض، نوديه للمتجر.
+const openVerified = (target, fallback) => {
   let done = false
 
   const timer = setTimeout(() => {
@@ -67,14 +68,7 @@ export const openWallet = (walletId) => {
     return
   }
 
-  // لينك مُسجَّل (ipn.eg) أو لينك استقبال: المتصفح بيفتح التطبيق لوحده،
-  // ولو التطبيق مش مثبّت بنوديه لصفحة التحميل بعد مهلة.
-  if (wallet.scheme || wallet.appLink) {
-    openAppLink(target, fallback)
-    return
-  }
-
-  window.location.href = target
+  openVerified(target, fallback)
 }
 
 // أي رابط IPA حقيقي بيفتح تطبيق انستا باي على الموبايل — نستخدمه بدل المتجر
