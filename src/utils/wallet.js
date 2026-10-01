@@ -10,15 +10,18 @@ export const isMobileDevice = isAndroid || isIOS
 export const walletTarget = (wallet, platform) => {
   if (!wallet) return ''
 
-  // لينك الاستقبال الحقيقي (ipn.eg) بيفتح التطبيق على الموبايل ويحبّي المبلغ
+  // لينك الاستقبال الحقيقي (ipn.eg/S/...) بيفتح التطبيق والمبلغ متعبّى
   if (wallet.scheme && platform !== 'desktop') return wallet.scheme
+
+  // نطاق مُسجَّل رسمياً للتطبيق (App Links / Universal Links):
+  // أي رابط عليه بيقفل التطبيق لوحده على أندرويد وآيفون.
+  if (wallet.appLink && platform !== 'desktop') return wallet.appLink
 
   // أندرويد: intent بيفتح التطبيق المثبّت على طول، ولو مش مثبّت بيفتح المتجر
   if (platform === 'android') {
     const fallback = wallet.install || wallet.web
     return (
       'intent://#Intent;' +
-      (wallet.app ? `scheme=${wallet.app};` : '') +
       (wallet.pkg ? `package=${wallet.pkg};` : '') +
       `S.browser_fallback_url=${encodeURIComponent(fallback)};end`
     )
@@ -28,23 +31,22 @@ export const walletTarget = (wallet, platform) => {
   return wallet.ios || wallet.install || wallet.web
 }
 
-// بنحاول نفتح التطبيق؛ لو فتح، المتصفح هيتخفي لوحده (visibilitychange).
-// لو التطبيق مش موجود أو المتصفح رفض، بنرجع للمتجر بعد مهلة قصيرة.
-const attemptOpen = (target, fallback) => {
-  document.addEventListener(
-    'visibilitychange',
-    () => {
-      if (document.visibilityState === 'hidden') clearTimeout(timer)
-    },
-    { once: false }
-  )
+// بنفتح رابط نطاق مُسجَّل: لو التطبيق مثبّت المتصفح هيفتحه على طول
+// (بيحصل visibilitychange). لو مش مثبّت، الصفحة هتفضل ظاهرة ونوديه للمتجر.
+const openAppLink = (target, fallback) => {
+  let done = false
 
-  // المتصفح بيرفض فتح التطبيق => بيحط error على الصفحة ويفضل ظاهر.
-  // نراقب: لو بعد 2 ثانية الصفحة لسه ظاهرة، يبقى التطبيق مش موجود.
   const timer = setTimeout(() => {
-    window.onerror = null
+    if (done) return
     window.location.href = fallback
-  }, 2000)
+  }, 2500)
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      done = true
+      clearTimeout(timer)
+    }
+  })
 
   window.location.href = target
 }
@@ -65,13 +67,14 @@ export const openWallet = (walletId) => {
     return
   }
 
-  // لينك الاستقبال: المتصفح بيفتحه لوحده، من غير ما نحتاج fallback
-  if (wallet.scheme) {
-    window.location.href = target
+  // لينك مُسجَّل (ipn.eg) أو لينك استقبال: المتصفح بيفتح التطبيق لوحده،
+  // ولو التطبيق مش مثبّت بنوديه لصفحة التحميل بعد مهلة.
+  if (wallet.scheme || wallet.appLink) {
+    openAppLink(target, fallback)
     return
   }
 
-  attemptOpen(target, fallback)
+  window.location.href = target
 }
 
 // أي رابط IPA حقيقي بيفتح تطبيق انستا باي على الموبايل — نستخدمه بدل المتجر
