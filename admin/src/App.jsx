@@ -3,6 +3,7 @@ import { client, adminService } from './adminService'
 import { categories as CATEGORIES } from '../../src/data/categories'
 import { calculateDiscount, formatPrice } from '../../src/utils/format'
 import { phoneToken } from '../../src/utils/token'
+import { siteUrl } from '../../src/utils/asset'
 
 const OWNER_EMAIL = 'abdelrahmanahmedmansy@gmail.com'
 
@@ -866,7 +867,7 @@ function CustomerTrackLink({ order }) {
   useEffect(() => {
     let alive = true
     phoneToken(order?.phone).then((tok) => {
-      if (alive && tok) setUrl(`${window.location.origin.replace(/\/admin\/?$/, '')}/track?c=${tok}&ref=wa`)
+      if (alive && tok) setUrl(`${siteUrl('track')}?c=${tok}&ref=wa`)
     })
     return () => {
       alive = false
@@ -1090,11 +1091,25 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChange
 
 function DeliveryNotify({ order, onCopy }) {
   const name = order.name || 'حبيبنا'
-  const link = `https://abdelrahmanmansy.github.io/vanilliano/track?order=${order.id}&ref=wa`
+  const [token, setToken] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    phoneToken(order?.phone).then((t) => {
+      if (alive) setToken(t || '')
+    })
+    return () => {
+      alive = false
+    }
+  }, [order?.phone])
+
+  const link = `${siteUrl('track')}?order=${order.id}&ref=wa${token ? `&c=${token}` : ''}`
+  const allLink = token ? `${siteUrl('track')}?c=${token}&ref=wa` : ''
   const msg =
     `وصل طلبك بالسلامة يا ${name} 💛\n\n` +
     `طلبك رقم ${order.id} وصل بمواعيده وكله تمام. 🧁🎈\n\n` +
     `لمتابعة طلبك ومعرفة مكانه وموعد وصوله، افتح الرابط ده:\n${link}\n\n` +
+    (allLink ? `ولو حبيت تشوف كل طلباتك على طول (من غير ما تكتب أي حاجة):\n${allLink}\n\n` : '') +
     `نشكرك من القلب على ثقتك في فانيليانو، ونتمنى أن يحوز طلبك على كامل رضاك.\n` +
     `شكراً لذوقك الغالي، وبنستناك في كل طلب… لأن أحلى التجارب بتتكرر دايماً مع فانيليانو 🧁\n` +
     `- فانيليانو`

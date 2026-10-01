@@ -37,6 +37,7 @@ import Breadcrumbs from '../components/ui/Breadcrumbs'
 import EmptyState from '../components/ui/EmptyState'
 import { detectOrderSource } from '../utils/source'
 import { phoneToken } from '../utils/token'
+import { siteUrl } from '../utils/asset'
 import { toast } from 'react-hot-toast'
 
 const cities = [
@@ -169,7 +170,7 @@ export default function Checkout() {
         : payment === 'vodafone'
           ? `📲 ارسل المبلغ على فودافون كاش: ${PAYMENT.vodafoneCashDisplay}`
           : '💵 اطلب الدفع نقداً عند الاستلام'
-    const siteURL = window.location.origin
+    const siteURL = siteUrl()
     const lines = [
       `🛒 طلب جديد من ${STORE.name}`,
       '',
