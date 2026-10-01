@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { client, adminService } from './adminService'
 import { categories as CATEGORIES } from '../../src/data/categories'
 import { calculateDiscount, formatPrice } from '../../src/utils/format'
+import { phoneToken } from '../../src/utils/token'
 
 const OWNER_EMAIL = 'abdelrahmanahmedmansy@gmail.com'
 
@@ -859,6 +860,46 @@ function notify(msg) {
   )
 }
 
+function CustomerTrackLink({ order }) {
+  const [url, setUrl] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    phoneToken(order?.phone).then((tok) => {
+      if (alive && tok) setUrl(`${window.location.origin.replace(/\/admin\/?$/, '')}/track?c=${tok}&ref=wa`)
+    })
+    return () => {
+      alive = false
+    }
+  }, [order?.phone])
+
+  if (!url) return null
+
+  return (
+    <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+      🧾 لينك «كل طلبات العميل» (يفتح طلباته من غير ما يكتب حاجة):{' '}
+      <button
+        type="button"
+        onClick={() => {
+          if (navigator.clipboard?.writeText) navigator.clipboard.writeText(url)
+          window.open(url, '_blank', 'noopener')
+        }}
+        style={{
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          color: '#7c3aed',
+          fontWeight: 700,
+          textDecoration: 'underline',
+          cursor: 'pointer',
+        }}
+      >
+        نسخ وفتح
+      </button>
+    </div>
+  )
+}
+
 function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChanged }) {
   const [msgs, setMsgs] = useState([])
   const [msgText, setMsgText] = useState('')
@@ -981,6 +1022,8 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChange
             🌐 العميل جاي من: <b style={{ color: '#7c3aed' }}>{sourceLabel(order.source)}</b>
           </p>
         )}
+
+        <CustomerTrackLink order={order} />
 
         {order.status === 'تم التسليم' && (
           <DeliveryNotify
