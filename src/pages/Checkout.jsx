@@ -93,6 +93,10 @@ export default function Checkout() {
   const [couponInput, setCouponInput] = useState('')
   const [couponError, setCouponError] = useState('')
   const [payment, setPayment] = useState('instapay')
+  const [wallet, setWallet] = useState('instapay')
+  const [copiedWallet, setCopiedWallet] = useState(false)
+  const selectedWallet =
+    WALLETS.find((w) => w.id === wallet) || WALLETS[0]
   const [deliveryMethod, setDeliveryMethod] = useState('delivery')
   const [form, setForm] = useState({
     name: '',
@@ -651,7 +655,11 @@ export default function Checkout() {
               {paymentMethods.map(({ id, label, desc, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => setPayment(id)}
+                  onClick={() => {
+                    setPayment(id)
+                    if (id === 'vodafone') setWallet('vodafone')
+                    if (id === 'instapay') setWallet('instapay')
+                  }}
                   className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-right transition-all ${
                     payment === id
                       ? 'border-burgundy-700 bg-burgundy-50/50'
@@ -696,9 +704,11 @@ export default function Checkout() {
                   حوّل المبلغ — اختار محفظتك اللي تحب:
                 </p>
 
-                <img
-                  src={payment === 'instapay' ? instapayQr : vodafoneQr}
-                  alt={`كود QR لـ ${payment === 'instapay' ? 'انستا باي' : 'فودافون كاش'}`}
+<img
+                  src={
+                    selectedWallet.id === 'instapay' ? instapayQr : vodafoneQr
+                  }
+                  alt={`كود QR لـ ${selectedWallet.name}`}
                   className="mx-auto h-40 w-40 rounded-2xl bg-white object-contain p-2 shadow-sm"
                 />
 
@@ -707,8 +717,15 @@ export default function Checkout() {
                     <button
                       key={wallet.id}
                       type="button"
-                      onClick={() => openWallet(wallet.id)}
-                      className="flex items-center justify-center gap-2 rounded-2xl border-2 border-vanilla-200 bg-white px-3 py-3 text-xs font-black text-burgundy-950 transition-all hover:border-burgundy-300 hover:bg-vanilla-50 active:scale-[0.97]"
+                      onClick={() => {
+                        setWallet(wallet.id)
+                        openWallet(wallet.id)
+                      }}
+                      className={`flex items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3 text-xs font-black transition-all active:scale-[0.97] ${
+                        selectedWallet.id === wallet.id
+                          ? 'border-burgundy-700 bg-burgundy-700 text-white'
+                          : 'border-vanilla-200 bg-white text-burgundy-950 hover:border-vanilla-300 hover:bg-vanilla-50'
+                      }`}
                     >
                       <span className="text-lg">{wallet.emoji}</span>
                       {wallet.name}
@@ -733,12 +750,37 @@ export default function Checkout() {
                   <b className="font-black text-burgundy-950">
                     {formatPrice(total)} ج.م
                   </b>
-                  {' · '}
-                  حوّل على:{' '}
-                  <b dir="ltr" className="font-black text-burgundy-950">
-                    {payment === 'instapay' ? PAYMENT.instapayDisplay : PAYMENT.vodafoneCashDisplay}
-                  </b>
                 </p>
+
+                <div className="mt-2 rounded-2xl bg-white p-3">
+                  <p className="text-[11px] text-burgundy-900/50">
+                    حوّل على ({selectedWallet.name}):
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(
+                        selectedWallet.phone.replace(/\D/g, '')
+                      )
+                      setCopiedWallet(true)
+                      setTimeout(() => setCopiedWallet(false), 1800)
+                    }}
+                    className="mt-1 flex w-full items-center justify-center gap-2"
+                  >
+                    <b dir="ltr" className="font-black text-burgundy-950">
+                      {selectedWallet.phoneDisplay}
+                    </b>
+                    {copiedWallet ? (
+                      <span className="text-[10px] font-black text-emerald-600">
+                        تم النسخ ✅
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-burgundy-900/40">
+                        اضغط للنسخ
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
 

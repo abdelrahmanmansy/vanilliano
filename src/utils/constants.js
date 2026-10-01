@@ -31,6 +31,16 @@ export const PAYMENT = {
   vodafoneCashDisplay: '\u200E010 0994 2440',
 }
 
+// ===== أرقام التحويل =====
+// غير الأرقام هنا بس، وهي هتظهر في صفحة الدفع على طول
+export const WALLET_NUMBERS = {
+  vodafone: { phone: '01009942440', display: '\u200E010 0994 2440' },
+  orange: { phone: '01009942440', display: '\u200E010 0994 2440' },
+  etisalat: { phone: '01009942440', display: '\u200E010 0994 2440' },
+  we: { phone: '01009942440', display: '\u200E010 0994 2440' },
+  instapay: { phone: '01111846842', display: '\u200E0111 1846 842' },
+}
+
 // المحافظ الإلكترونية في مصر — الزر بيفتح تطبيق المحفظة على الموبايل مباشرة
 // pkg = اسم التطبيق الرسمي في جوجل بلاي (متحقق منه)
 // install = صفحة المتجر لو التطبيق مش مثبّت | web = الموقع الرسمي
@@ -40,8 +50,7 @@ export const WALLETS = [
     name: 'فودافون كاش',
     emoji: '🔴',
     color: '#e60000',
-    phone: '01009942440',
-    phoneDisplay: '0100 994 2440',
+    ...WALLET_NUMBERS.vodafone,
     pkg: 'com.vodafone.spoc',
     install: 'https://play.google.com/store/apps/details?id=com.vodafone.spoc',
     web: 'https://www.vodafone.com.eg/vodafone-cash',
@@ -51,8 +60,7 @@ export const WALLETS = [
     name: 'محفظة أورنج',
     emoji: '🟠',
     color: '#ff7900',
-    phone: '01009942440',
-    phoneDisplay: '0100 994 2440',
+    ...WALLET_NUMBERS.orange,
     pkg: 'com.orange.orangemoney_customer',
     install:
       'https://play.google.com/store/apps/details?id=com.orange.orangemoney_customer',
@@ -63,8 +71,7 @@ export const WALLETS = [
     name: 'محفظة اتصالات كاش',
     emoji: '🟢',
     color: '#8cc63f',
-    phone: '01009942440',
-    phoneDisplay: '0100 994 2440',
+    ...WALLET_NUMBERS.etisalat,
     pkg: 'com.etisalat.flous',
     install: 'https://play.google.com/store/apps/details?id=com.etisalat.flous',
     web: 'https://www.etisalat.eg/ar/consumer/ecash',
@@ -74,8 +81,7 @@ export const WALLETS = [
     name: 'محفظة وي',
     emoji: '🟣',
     color: '#6a1b9a',
-    phone: '01009942440',
-    phoneDisplay: '0100 994 2440',
+    ...WALLET_NUMBERS.we,
     pkg: 'com.TE.WEWallet',
     install: 'https://play.google.com/store/apps/details?id=com.TE.WEWallet',
     ios: 'https://apps.apple.com/eg/app/we-pay-eg/id1485158275',
@@ -86,8 +92,7 @@ export const WALLETS = [
     name: 'انستا باي',
     emoji: '🟣',
     color: '#5b21b6',
-    phone: '01111846842',
-    phoneDisplay: '0111 1846 842',
+    ...WALLET_NUMBERS.instapay,
     pkg: 'com.egyptianbanks.instapay',
     install:
       'https://play.google.com/store/apps/details?id=com.egyptianbanks.instapay',
