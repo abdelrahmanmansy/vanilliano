@@ -26,6 +26,15 @@ const KIND_LABELS = {
   message: 'رسالة',
 }
 
+const SOURCE_LABELS = {
+  wa: 'واتساب',
+  ig: 'إنستغرام',
+  fb: 'فيسبوك',
+  search: 'بحث',
+  site: 'مباشر',
+  other: 'أخرى',
+}
+const sourceLabel = (code) => SOURCE_LABELS[code] || code || '—'
 const fmtDate = (iso) => {
   if (!iso) return '—'
   const d = new Date(iso)
@@ -774,7 +783,7 @@ function notify(msg) {
         ) : (
           <table>
             <thead>
-              <tr><th>رقم</th><th>الاسم</th><th>الجوال</th><th>البريد</th><th>العنوان</th><th>الدفع</th><th>المنتجات</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th></tr>
+              <tr><th>رقم</th><th>الاسم</th><th>الجوال</th><th>البريد</th><th>العنوان</th><th>الدفع</th><th>المنتجات</th><th>الإجمالي</th><th>الحالة</th><th>المصدر</th><th>التاريخ</th></tr>
             </thead>
             <tbody>
               {(orders || []).map((o) => (
@@ -838,6 +847,7 @@ function notify(msg) {
                       </select>
                     </div>
                   </td>
+                  <td className="muted">{sourceLabel(o.source)}</td>
                   <td className="muted">{fmtDate(o.created_at)}</td>
                 </tr>
               ))}
@@ -966,6 +976,12 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChange
 
         {order.note && <p className="muted" style={{ marginTop: 12, fontSize: 12 }}>{order.note}</p>}
 
+        {order.source && (
+          <p className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+            🌐 العميل جاي من: <b style={{ color: '#7c3aed' }}>{sourceLabel(order.source)}</b>
+          </p>
+        )}
+
         {order.status === 'تم التسليم' && (
           <DeliveryNotify
             order={order}
@@ -1031,7 +1047,7 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChange
 
 function DeliveryNotify({ order, onCopy }) {
   const name = order.name || 'حبيبنا'
-  const link = `https://abdelrahmanmansy.github.io/vanilliano/track?order=${order.id}`
+  const link = `https://abdelrahmanmansy.github.io/vanilliano/track?order=${order.id}&ref=wa`
   const msg =
     `وصل طلبك بالسلامة يا ${name} 💛\n\n` +
     `طلبك رقم ${order.id} وصل بمواعيده وكله تمام. 🧁🎈\n\n` +

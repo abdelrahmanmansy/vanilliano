@@ -43,6 +43,21 @@ export const supabaseService = {
     return { data: data || [], error }
   },
 
+  async getOrdersByPhone(phone) {
+    if (!client || !phone) return { data: [], error: null }
+    const { data, error } = await client.rpc('orders_by_phone', { p_phone: String(phone) })
+    return { data: data || [], error }
+  },
+
+  async setOrderSource(id, source) {
+    if (!client || !id || !source) return
+    try {
+      await client.rpc('set_order_source', { p_id: String(id), p_source: String(source) })
+    } catch {
+      /* ignore */
+    }
+  },
+
   async trackOrder(id) {
     if (!client || !id) return { data: null, error: null }
     const { data, error } = await client.rpc('track_order', { p_id: String(id).trim() })
@@ -92,6 +107,7 @@ export const supabaseService = {
         total: order.total != null ? order.total : null,
         note: order.shippingInfo?.notes || null,
         status: order.status || 'جديد',
+        source: order.source || null,
       })
     } catch {
       /* ignore */

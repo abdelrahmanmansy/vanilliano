@@ -83,9 +83,12 @@ create table if not exists public.orders (
   "total" numeric,
   "note" text,
   "status" text not null default 'جديد',
+  "source" text,
   "created_at" timestamptz not null default now(),
   "completed_at" timestamptz
 );
+
+alter table public.orders add column if not exists source text;
 
 alter table public.orders enable row level security;
 
@@ -315,3 +318,30 @@ $$;
 
 revoke all on function public.order_messages_for(text) from public;
 grant execute on function public.order_messages_for(text) to anon, authenticated;
+
+-- طلبات العميل بالرقم (من غير ما يكتب رقم الطلب) + تسجيل مصدر الزيارة
+create or replace function public.orders_by_phone(p_phone text)
+returns setof public.orders
+language sql security definer stable set search_path = public as $$
+  select *
+  from public.orders o
+  where regexp_replace(coalesce(o.phone, ''), '\D', '', 'g') =
+        regexp_replace(coalesce(p_phone, ''), '\D', '', 'g')
+  order by o.created_at desc;
+$$;
+
+revoke all on function public.orders_by_phone(text) from public;
+grant execute on function public.orders_by_phone(text) to anon, authenticated;
+
+create or replace function public.set_order_source(p_id text, p_source text)
+returns setof public.orders
+language sql security definer set search_path = public as $$
+  update public.orders o
+  set source = coalesce(nullif(p_source, ''), o.source)
+  where o.id = p_id
+    and (o.source is null or o.source = '')
+  returning o.*;
+$$;
+
+revoke all on function public.set_order_source(text, text) from public;
+grant execute on function public.set_order_source(text, text) to anon, authenticated;

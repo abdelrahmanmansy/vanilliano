@@ -5,7 +5,28 @@ import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice, formatDate } from '../utils/format'
 import { STORAGE_KEYS } from '../utils/constants'
+import { detectOrderSource } from '../utils/source'
 import Button from '../components/ui/Button'
+
+const PHONE_KEY = 'vanilliano_phone'
+
+const stripPhone = (p) => String(p || '').replace(/\D/g, '')
+
+const readStoredPhone = () => {
+  try {
+    return window.localStorage.getItem(PHONE_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+const saveStoredPhone = (phone) => {
+  try {
+    window.localStorage.setItem(PHONE_KEY, String(phone || ''))
+  } catch {
+    /* ignore */
+  }
+}
 
 const findAllLocal = () => {
   try {
@@ -136,6 +157,9 @@ export default function Track() {
   const [chatText, setChatText] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [sending, setSending] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [myOrders, setMyOrders] = useState([])
+  const [lookup, setLookup] = useState('idle')
 
   const loadChat = async (id) => {
     setChatLoading(true)
@@ -194,14 +218,54 @@ export default function Track() {
     if (found) {
       setOrder(found)
       loadChat(id)
+      if (found.phone) {
+        saveStoredPhone(found.phone)
+        setPhone((cur) => (stripPhone(cur) ? cur : found.phone))
+      }
+      supabaseService.setOrderSource(id, detectOrderSource())
     } else {
       setNotFound(true)
     }
   }
 
+  const loadMyOrders = async (phoneStr) => {
+    const p = stripPhone(phoneStr)
+    if (!p) return
+    setLookup('loading')
+    const { data } = await supabaseService.getOrdersByPhone(p)
+    const list = Array.isArray(data) ? data.sort(byDate).reverse() : []
+    setMyOrders(list)
+    setLookup(list.length ? 'done' : 'empty')
+    if (list.length) saveStoredPhone(phoneStr)
+  }
+
+  const openFromList = (o) => {
+    const id = String(o.id || '')
+    if (!id) return
+    const src = detectOrderSource()
+    window.history.replaceState(null, '', `?order=${id}`)
+    setQuery(id)
+    setMyOrders([])
+    setLookup('idle')
+    setNotFound(false)
+    setOrder(o)
+    loadChat(id)
+    supabaseService.setOrderSource(id, src)
+  }
+
   useEffect(() => {
     const id = params.get('order')
     if (id) load(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.get('order')])
+
+  useEffect(() => {
+    if (params.get('order')) return
+    const stored = readStoredPhone()
+    if (stripPhone(stored)) {
+      setPhone(stored)
+      loadMyOrders(stored)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.get('order')])
 
@@ -218,9 +282,78 @@ export default function Track() {
           </div>
           <h1 className="text-2xl font-black text-burgundy-950">تتبع طلبك</h1>
           <p className="mt-2 text-sm text-burgundy-900/60">
-            اكتب رقم الطلب اللي وصلك علشان تعرف وصل لفين
+            اكتب رقم الطلب اللي وصلك، أو خش على «طلباتي» برقم موبايلك واختار طلبك على طول
           </p>
         </div>
+
+        {!order && (
+          <div className="mb-5 rounded-2xl border border-vanilla-100 bg-cream-50 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-lg">🧾</span>
+              <div>
+                <p className="text-sm font-black text-burgundy-950">طلباتي</p>
+                <p className="text-[11px] text-burgundy-900/50">
+                  لو طلبت من فانيليانو قبل كده، اكتب موبايلك وهتشوف كل طلباتك من غير ما تدور على
+                  أرقام الطلبات
+                </p>
+              </div>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                loadMyOrders(phone)
+              }}
+              className="flex gap-2"
+            >
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="رقم الموبايل (مثال 01012345678)"
+                dir="ltr"
+                className="w-full rounded-2xl border border-vanilla-200 bg-white px-4 py-3 text-sm font-bold text-right text-burgundy-950 outline-none transition-colors focus:border-burgundy-400"
+              />
+              <Button type="submit" size="lg" variant="dark" loading={lookup === 'loading'}>
+                {lookup === 'loading' ? 'بيعاين...' : 'عرض طلباتي'}
+              </Button>
+            </form>
+
+            {lookup === 'empty' && (
+              <p className="mt-3 rounded-2xl bg-white p-3 text-center text-xs font-bold text-burgundy-900/50">
+                مفيش طلبات تحت الرقم ده 🙁 — تأكد من الرقم، أو جاوب على واتساب لو محتاج مساعدة.
+              </p>
+            )}
+
+            {lookup === 'done' && myOrders.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {myOrders.map((o) => (
+                  <li key={o.id}>
+                    <button
+                      onClick={() => openFromList(o)}
+                      className="flex w-full items-center justify-between gap-2 rounded-2xl bg-white p-3 text-right transition-colors hover:bg-vanilla-50"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black text-burgundy-950" dir="ltr">
+                          {o.id}
+                        </span>
+                        <span className="block text-[11px] font-bold text-burgundy-900/45">
+                          {formatDate(o.created_at || o.date)}
+                        </span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <span className="rounded-full bg-vanilla-100 px-2 py-1 text-[11px] font-black text-burgundy-800">
+                          {o.status}
+                        </span>
+                        <span className="text-xs font-black text-burgundy-900">
+                          {formatPrice(o.total)} ج.م
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <form
           onSubmit={(e) => {

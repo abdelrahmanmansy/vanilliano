@@ -72,3 +72,33 @@ $$;
 
 revoke all on function public.track_order(text) from public;
 grant execute on function public.track_order(text) to anon, authenticated;
+
+-- (4) «طلباتي» — العميل يفتح صفحة التتبع ويشوف طلباته برقم موبايله من غير رقم الطلب
+alter table public.orders add column if not exists source text;
+
+create or replace function public.orders_by_phone(p_phone text)
+returns setof public.orders
+language sql security definer stable set search_path = public as $$
+  select *
+  from public.orders o
+  where regexp_replace(coalesce(o.phone, ''), '\D', '', 'g') =
+        regexp_replace(coalesce(p_phone, ''), '\D', '', 'g')
+  order by o.created_at desc;
+$$;
+
+revoke all on function public.orders_by_phone(text) from public;
+grant execute on function public.orders_by_phone(text) to anon, authenticated;
+
+-- (5) تسجيل مصدر الزيارة (واتساب / انستغرام / فيسبوك / مباشر) لظهوره في اللوحة
+create or replace function public.set_order_source(p_id text, p_source text)
+returns setof public.orders
+language sql security definer set search_path = public as $$
+  update public.orders o
+  set source = coalesce(nullif(p_source, ''), o.source)
+  where o.id = p_id
+    and (o.source is null or o.source = '')
+  returning o.*;
+$$;
+
+revoke all on function public.set_order_source(text, text) from public;
+grant execute on function public.set_order_source(text, text) to anon, authenticated;

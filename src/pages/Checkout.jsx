@@ -34,6 +34,7 @@ import {
 import Button from '../components/ui/Button'
 import Breadcrumbs from '../components/ui/Breadcrumbs'
 import EmptyState from '../components/ui/EmptyState'
+import { detectOrderSource } from '../utils/source'
 import { toast } from 'react-hot-toast'
 
 const cities = [
@@ -204,7 +205,7 @@ export default function Checkout() {
       `🌐 الموقع: ${STORE.domain}`,
       'الرجاء تأكيد توفر الطلب وموعد التوصيل.',
       '',
-      `📍 لمتابعة طلبك ومعرفة مكانه وموعد وصوله: ${siteURL}/track?order=${orderId}`,
+      `📍 لمتابعة طلبك ومعرفة مكانه وموعد وصوله: ${siteURL}/track?order=${orderId}&ref=wa`,
     )
     return lines.join('\n')
   }
@@ -233,10 +234,13 @@ export default function Checkout() {
     order.shippingInfo.notes = memberAmount > 0
       ? `${notes}${notes ? ' — ' : ''}خصم أول طلب ${memberPercent}% = -${formatPrice(memberAmount)} ج.م`.trim()
       : notes
-    window.localStorage.setItem(
-      STORAGE_KEYS.orders,
-      JSON.stringify([order, ...existing]),
-    )
+    order.source = detectOrderSource()
+    window.localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify([order, ...existing]))
+    try {
+      window.localStorage.setItem('vanilliano_phone', order.shippingInfo?.phone || '')
+    } catch {
+      /* ignore */
+    }
     supabaseService.addOrder(order)
     supabaseService.addActivity({
       kind: 'purchase',
