@@ -38,7 +38,7 @@ import EmptyState from '../components/ui/EmptyState'
 import { detectOrderSource } from '../utils/source'
 import { phoneToken } from '../utils/token'
 import { siteUrl } from '../utils/asset'
-import WALLETS, { openWallet } from '../utils/wallet'
+import { openWallet } from '../utils/wallet'
 import { toast } from 'react-hot-toast'
 
 const cities = [
@@ -93,10 +93,7 @@ export default function Checkout() {
   const [couponInput, setCouponInput] = useState('')
   const [couponError, setCouponError] = useState('')
   const [payment, setPayment] = useState('instapay')
-  const [wallet, setWallet] = useState('instapay')
   const [copiedWallet, setCopiedWallet] = useState(false)
-  const selectedWallet =
-    WALLETS.find((w) => w.id === wallet) || WALLETS[0]
   const [deliveryMethod, setDeliveryMethod] = useState('delivery')
   const [form, setForm] = useState({
     name: '',
@@ -655,11 +652,7 @@ export default function Checkout() {
               {paymentMethods.map(({ id, label, desc, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => {
-                    setPayment(id)
-                    if (id === 'vodafone') setWallet('vodafone')
-                    if (id === 'instapay') setWallet('instapay')
-                  }}
+                  onClick={() => setPayment(id)}
                   className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-right transition-all ${
                     payment === id
                       ? 'border-burgundy-700 bg-burgundy-50/50'
@@ -698,52 +691,18 @@ export default function Checkout() {
               ))}
             </div>
 
-            {(payment === 'instapay' || payment === 'vodafone') && (
+{(payment === 'instapay' || payment === 'vodafone') && (
               <div className="mt-4 rounded-2xl border border-vanilla-100 bg-cream-50 p-4 text-center">
-                <p className="mb-3 text-sm font-black text-burgundy-950">
-                  حوّل المبلغ — اختار محفظتك اللي تحب:
-                </p>
-
-<img
-                  src={
-                    selectedWallet.id === 'instapay' ? instapayQr : vodafoneQr
-                  }
-                  alt={`كود QR لـ ${selectedWallet.name}`}
-                  className="mx-auto h-40 w-40 rounded-2xl bg-white object-contain p-2 shadow-sm"
-                />
-
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  {WALLETS.map((wallet) => (
-                    <button
-                      key={wallet.id}
-                      type="button"
-                      onClick={() => {
-                        setWallet(wallet.id)
-                        openWallet(wallet.id)
-                      }}
-                      className={`flex items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3 text-xs font-black transition-all active:scale-[0.97] ${
-                        selectedWallet.id === wallet.id
-                          ? 'border-burgundy-700 bg-burgundy-700 text-white'
-                          : 'border-vanilla-200 bg-white text-burgundy-950 hover:border-vanilla-300 hover:bg-vanilla-50'
-                      }`}
-                    >
-                      <span className="text-lg">{wallet.emoji}</span>
-                      {wallet.name}
-                    </button>
-                  ))}
-                </div>
-
-                {PAYMENT.instapayLink && (
-                  <a
-                    href={PAYMENT.instapayLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-burgundy-700 px-5 py-2.5 text-sm font-black text-white transition-all duration-300 hover:bg-burgundy-800 active:scale-[0.98]"
-                  >
-                    <Smartphone size={16} />
-                    افتح انستا باي وحوّل دلوقتي
-                  </a>
-                )}
+                <button
+                  type="button"
+                  onClick={() => openWallet(payment)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-4 text-base font-black text-white shadow-lg transition-all duration-300 hover:bg-emerald-700 active:scale-[0.98]"
+                >
+                  <Smartphone size={20} />
+                  {payment === 'instapay'
+                    ? 'افتح انستا باي وحوّل دلوقتي'
+                    : 'افتح فودافون كاش وحوّل دلوقتي'}
+                </button>
 
                 <p className="mt-3 text-[11px] text-burgundy-900/50">
                   المبلغ المحسوب:{' '}
@@ -752,23 +711,34 @@ export default function Checkout() {
                   </b>
                 </p>
 
-                <div className="mt-2 rounded-2xl bg-white p-3">
+                <img
+                  src={payment === 'instapay' ? instapayQr : vodafoneQr}
+                  alt={`كود QR لـ ${payment === 'instapay' ? 'انستا باي' : 'فودافون كاش'}`}
+                  className="mx-auto mt-3 h-40 w-40 rounded-2xl bg-white object-contain p-2 shadow-sm"
+                />
+
+                <div className="mt-3 rounded-2xl bg-white p-3">
                   <p className="text-[11px] text-burgundy-900/50">
-                    حوّل على ({selectedWallet.name}):
+                    حوّل على (
+                    {payment === 'instapay' ? 'انستا باي' : 'فودافون كاش'}):
                   </p>
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard?.writeText(
-                        selectedWallet.phone.replace(/\D/g, '')
-                      )
+                      const phone =
+                        payment === 'instapay'
+                          ? PAYMENT.instapay
+                          : PAYMENT.vodafoneCash
+                      navigator.clipboard?.writeText(phone.replace(/\D/g, ''))
                       setCopiedWallet(true)
                       setTimeout(() => setCopiedWallet(false), 1800)
                     }}
                     className="mt-1 flex w-full items-center justify-center gap-2"
                   >
                     <b dir="ltr" className="font-black text-burgundy-950">
-                      {selectedWallet.phoneDisplay}
+                      {payment === 'instapay'
+                        ? PAYMENT.instapayDisplay
+                        : PAYMENT.vodafoneCashDisplay}
                     </b>
                     {copiedWallet ? (
                       <span className="text-[10px] font-black text-emerald-600">
