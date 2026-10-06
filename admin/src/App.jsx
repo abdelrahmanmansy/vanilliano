@@ -213,6 +213,7 @@ function Shell({ user, onLogout }) {
     { id: 'overview', label: 'نظرة عامة', icon: '📊' },
     { id: 'products', label: 'المنتجات', icon: '🧁' },
     { id: 'categories', label: 'الأقسام', icon: '🗂️' },
+    { id: 'discounts', label: 'الخصومات', icon: '🏷️' },
     { id: 'bestsellers', label: 'الأكثر مبيعاً', icon: '🏆' },
     { id: 'orders', label: 'الطلبات', icon: '🛒' },
     { id: 'reviews', label: 'آراء العملاء', icon: '⭐' },
@@ -269,6 +270,7 @@ function Shell({ user, onLogout }) {
         {tab === 'overview' && <Overview onOpenOrder={openOrder} />}
         {tab === 'products' && <Products />}
         {tab === 'categories' && <Categories />}
+        {tab === 'discounts' && <Discounts />}
         {tab === 'bestsellers' && <BestSellers />}
         {tab === 'orders' && <Orders highlightId={highlightId} />}
         {tab === 'reviews' && <Reviews />}
@@ -977,6 +979,143 @@ function CategoryForm({ category, onSave, onCancel }) {
   )
 }
 
+function Discounts() {
+  const { data: settings, loading, error, refresh } = useLoad(() => adminService.getStoreSettings())
+  const [enabled, setEnabled] = useState(false)
+  const [threshold, setThreshold] = useState('')
+  const [type, setType] = useState('percent')
+  const [value, setValue] = useState('')
+  const [flash, setFlash] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!settings) return
+    const row = settings.find((s) => s.key === 'threshold_discount')
+    const cfg = row?.value || {}
+    setEnabled(Boolean(cfg.enabled))
+    setThreshold(cfg.threshold ?? '')
+    setType(cfg.type === 'amount' ? 'amount' : 'percent')
+    setValue(cfg.value ?? '')
+  }, [settings])
+
+  function notify(msg) {
+    setFlash(msg)
+    clearTimeout(window.__adminDiscTimer)
+    window.__adminDiscTimer = setTimeout(() => setFlash(''), 4500)
+  }
+
+  const save = async (e) => {
+    e.preventDefault()
+    const th = Number(threshold)
+    const val = Number(value)
+    if (enabled) {
+      if (!th || th <= 0) {
+        notify('اكتب الحد الأدنى للمبلغ (جنيه)')
+        return
+      }
+      if (!val || val <= 0) {
+        notify('اكتب قيمة الخصم')
+        return
+      }
+      if (type === 'percent' && val > 100) {
+        notify('نسبة الخصم أكبر من 100%')
+        return
+      }
+    }
+    setBusy(true)
+    try {
+      await adminService.setStoreSetting('threshold_discount', {
+        enabled: Boolean(enabled),
+        threshold: th || 0,
+        type,
+        value: val || 0,
+      })
+      await refresh()
+      notify(enabled ? 'تم تفعيل خصم مبلغ مينيمم ✓' : 'تم إيقاف خصم المبلغ مينيمم (الكل هيشوف الأسعار العادية) ✓')
+    } catch (e2) {
+      notify('تعذر الحفظ: ' + e2.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="space mb">
+        <div>
+          <h1>الخصومات</h1>
+          <p className="sub">تحكم في الخصومات التلقائية واليدوية في المتجر</p>
+        </div>
+      </div>
+
+      <Flash msg={flash} />
+      <ErrorBox error={error} />
+
+      <div className="card">
+        {loading ? (
+          <Loading />
+        ) : (
+          <form onSubmit={save}>
+            <div className="space" style={{ marginBottom: 14 }}>
+              <h2 style={{ fontSize: 17 }}>خصم تلقائي عند حد المبلغ</h2>
+              <label className="switch" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+                <span className="muted bold" style={{ fontSize: 13 }}>{enabled ? 'مفعل ✓' : 'متوقف'}</span>
+              </label>
+            </div>
+            <p className="muted" style={{ marginBottom: 14 }}>
+              لو مجموع طلب العميل وصل للمبلغ اللي هتحدده، يتحسب له خصم تلقائي قبل الدفع. مثال: طلب +500 ج.م = خصم 10%.
+            </p>
+            <div className="grid3" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+              <div className="field">
+                <label>الحد الأدنى للطلب (ج.م)</label>
+                <input
+                  dir="ltr"
+                  type="number"
+                  min="0"
+                  value={threshold}
+                  onChange={(e) => setThreshold(e.target.value)}
+                  placeholder="500"
+                />
+              </div>
+              <div className="field">
+                <label>نوع الخصم</label>
+                <select value={type} onChange={(e) => setType(e.target.value)}>
+                  <option value="percent">نسبة %</option>
+                  <option value="amount">مبلغ ثابت (ج.م)</option>
+                </select>
+              </div>
+              <div className="field">
+                <label>قيمة الخصم</label>
+                <input
+                  dir="ltr"
+                  type="number"
+                  min="0"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  placeholder={type === 'percent' ? '10' : '50'}
+                />
+              </div>
+            </div>
+            <div className="row">
+              <button className="btn primary" disabled={busy}>
+                {busy ? 'جارٍ الحفظ…' : 'حفظ إعدادات الخصم'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      <div className="card">
+        <h2 style={{ fontSize: 17, marginBottom: 6 }}>خصم يدوي عند تسجيل عملية شراء</h2>
+        <p className="muted" style={{ marginBottom: 4 }}>
+          في شاشة «الطلبات → + تسجيل طلب جديد» تقدر تضيف خصماً (مبلغ أو نسبة) على أي طلب بيتسجل يدوياً.
+        </p>
+      </div>
+    </>
+  )
+}
+
 function BestSellers() {
   const { data: sellers, loading, error } = useLoad(() => adminService.getTopSellers(100))
   return (
@@ -1363,6 +1502,16 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChange
 
         <div className="oc-foot">
           <div>
+            {order.subtotal != null && order.subtotal !== Number(order.total) && (
+              <div className="muted" style={{ marginBottom: 2, fontSize: 12 }}>
+                الإجمالي قبل الخصم: {formatPrice(order.subtotal)} ج.م
+              </div>
+            )}
+            {Number(order.discount) > 0 && (
+              <div className="muted" style={{ color: 'var(--green)', fontWeight: 700, marginBottom: 4 }}>
+                الخصم: -{formatPrice(order.discount)} ج.م
+              </div>
+            )}
             <span className="muted">الإجمالي</span>{' '}
             <b className="bold" style={{ fontSize: 18 }}>{formatPrice(order.total)} ج.م</b>
           </div>
@@ -1519,9 +1668,18 @@ function PurchaseForm({ products, onSave, onCancel }) {
   const [payment, setPayment] = useState('cod')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
+  const [discountEnabled, setDiscountEnabled] = useState(false)
+  const [discountType, setDiscountType] = useState('amount')
+  const [discountValue, setDiscountValue] = useState('')
 
   const chosen = products.find((p) => p.id === productId)
-  const total = chosen ? Number(chosen.price || 0) * Number(qty || 0) : 0
+  const subtotal = chosen ? Number(chosen.price || 0) * Number(qty || 0) : 0
+  const discountAmount = !discountEnabled
+    ? 0
+    : discountType === 'percent'
+      ? Math.round((subtotal * Number(discountValue || 0)) / 100)
+      : Number(discountValue || 0)
+  const total = Math.max(subtotal - discountAmount, 0)
 
   async function submit(e) {
     e.preventDefault()
@@ -1535,6 +1693,8 @@ function PurchaseForm({ products, onSave, onCancel }) {
         phone: phone.trim() || null,
         payment_method: payment,
         items: [{ id: chosen.id, name: chosen.name, price: Number(chosen.price), quantity: Number(qty) }],
+        subtotal,
+        discount: discountAmount,
         total,
         note: note.trim() || null,
         status: 'جديد',
@@ -1594,8 +1754,50 @@ function PurchaseForm({ products, onSave, onCancel }) {
         </div>
         <div className="field">
           <label>الإجمالي</label>
-          <div className="bold" style={{ padding: '9px 0', fontSize: 18 }}>{formatPrice(total)} ج.م</div>
+          <div className="bold" style={{ padding: '9px 0', fontSize: 18 }}>
+            {discountEnabled && subtotal > discountAmount ? (
+              <>
+                <span className="muted" style={{ textDecoration: 'line-through', fontSize: 13 }}>{formatPrice(subtotal)}</span>{' '}
+                {formatPrice(total)} ج.م
+              </>
+            ) : (
+              formatPrice(total)
+            )}{' '}
+            {discountEnabled && subtotal > discountAmount ? <span className="muted">(قبل الخصم {formatPrice(subtotal)} ج.م)</span> : 'ج.م'}
+          </div>
         </div>
+      </div>
+
+      <div className="card" style={{ boxShadow: 'none', background: 'var(--cream)', border: '1px dashed var(--line)' }}>
+        <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 10 }}>
+          <input type="checkbox" checked={discountEnabled} onChange={(e) => setDiscountEnabled(e.target.checked)} />
+          <span className="bold">تفعيل خصم على الطلب ده</span>
+        </label>
+        {discountEnabled && (
+          <div className="grid2">
+            <div className="field">
+              <label>نوع الخصم</label>
+              <select value={discountType} onChange={(e) => setDiscountType(e.target.value)}>
+                <option value="amount">مبلغ ثابت (ج.م)</option>
+                <option value="percent">نسبة %</option>
+              </select>
+            </div>
+            <div className="field">
+              <label>قيمة الخصم</label>
+              <input
+                dir="ltr"
+                type="number"
+                min="0"
+                value={discountValue}
+                onChange={(e) => setDiscountValue(e.target.value)}
+                placeholder={discountType === 'percent' ? '10' : '50'}
+              />
+              <span className="muted" style={{ display: 'block', marginTop: 4 }}>
+                بيخصم {discountType === 'percent' ? `%${discountValue || 0} من الإجمالي` : `${formatPrice(Number(discountValue) || 0)} ج.م`} = -{formatPrice(discountAmount)} ج.م
+              </span>
+            </div>
+          </div>
+        )}
       </div>
       <div className="field">
         <label>ملاحظات (اختياري)</label>

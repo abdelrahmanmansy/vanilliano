@@ -30,6 +30,12 @@ export const supabaseService = {
     return { data: data || null, error }
   },
 
+  async getStoreSettings() {
+    if (!client) return { data: [], error: null }
+    const { data, error } = await client.from('store_settings').select('*')
+    return { data: data || [], error }
+  },
+
   async getTopSellers(maxCount = 8) {
     if (!client) return { data: [], error: null }
     const { data, error } = await client.rpc('top_sellers', { max_count: maxCount })
@@ -120,6 +126,7 @@ export const supabaseService = {
         payment_method: order.paymentMethod || null,
         items: order.items || null,
         total: order.total != null ? order.total : null,
+        discount: order.discount != null ? order.discount : 0,
         note: order.shippingInfo?.notes || null,
         status: order.status || 'جديد',
         source: order.source || null,

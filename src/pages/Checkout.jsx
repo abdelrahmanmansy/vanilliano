@@ -106,6 +106,8 @@ export default function Checkout() {
   })
   const [errors, setErrors] = useState({})
   const [memberPercent, setMemberPercent] = useState(0)
+  const [autoAmount, setAutoAmount] = useState(0)
+  const [autoThreshold, setAutoThreshold] = useState(0)
 
   useEffect(() => {
     let alive = true
@@ -121,6 +123,36 @@ export default function Checkout() {
     }
   }, [user?.email])
 
+  // خصم تلقائي عند حد مبلغ (إعداد من لوحة التحكم)
+  useEffect(() => {
+    let alive = true
+    supabaseService.getStoreSettings().then(({ data, error }) => {
+      if (!alive || error || !Array.isArray(data)) return
+      const row = data.find((s) => s.key === 'threshold_discount')
+      const cfg = row?.value
+      if (!cfg || !cfg.enabled) {
+        setAutoAmount(0)
+        setAutoThreshold(0)
+        return
+      }
+      const threshold = Number(cfg.threshold) || 0
+      if (threshold <= 0 || subtotal < threshold) {
+        setAutoAmount(0)
+        setAutoThreshold(threshold)
+        return
+      }
+      const amt =
+        cfg.type === 'amount'
+          ? Number(cfg.value) || 0
+          : Math.round((subtotal * (Number(cfg.value) || 0)) / 100)
+      setAutoAmount(Math.max(0, amt))
+      setAutoThreshold(threshold)
+    })
+    return () => {
+      alive = false
+    }
+  }, [subtotal])
+
   const shipping =
     deliveryMethod === 'pickup' ||
     subtotal === 0 ||
@@ -129,7 +161,7 @@ export default function Checkout() {
       : SHIPPING_COST
   const discount = coupon ? coupon.discountValue : 0
   const memberAmount = Math.round((subtotal * memberPercent) / 100)
-  const total = Math.max(subtotal - discount - memberAmount, 0) + shipping
+  const total = Math.max(subtotal - discount - memberAmount - autoAmount, 0) + shipping
 
   const setField = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }))
@@ -200,6 +232,8 @@ export default function Checkout() {
         )
     })
     if (orderDiscount > 0) lines.push(`🎁 الخصم: -${formatPrice(orderDiscount)} ج.م`)
+    if (autoThreshold > 0 && autoAmount > 0)
+      lines.push(`🏷️ خصم تلقائي (طلب فوق ${formatPrice(autoThreshold)} ج.م): -${formatPrice(autoAmount)} ج.م`)
     if (memberAmount > 0)
       lines.push(`🎉 خصم أول طلب لعضو جديد (${memberPercent}%): -${formatPrice(memberAmount)} ج.م`)
     lines.push(
@@ -233,7 +267,7 @@ export default function Checkout() {
         quantity: item.quantity,
       })),
       subtotal,
-      discount,
+      discount: discount + autoAmount,
       shipping,
       total,
       paymentMethod: payment,
@@ -245,8 +279,13 @@ export default function Checkout() {
       window.localStorage.getItem(STORAGE_KEYS.orders) || '[]',
     )
     const notes = String(order.shippingInfo?.notes || '').trim()
-    order.shippingInfo.notes = memberAmount > 0
-      ? `${notes}${notes ? ' — ' : ''}خصم أول طلب ${memberPercent}% = -${formatPrice(memberAmount)} ج.م`.trim()
+    const extraNote = []
+    if (autoAmount > 0 && autoThreshold > 0)
+      extraNote.push(`خصم تلقائي (طلب فوق ${formatPrice(autoThreshold)} ج.م) = -${formatPrice(autoAmount)} ج.م`)
+    if (memberAmount > 0)
+      extraNote.push(`خصم أول طلب ${memberPercent}% = -${formatPrice(memberAmount)} ج.م`)
+    order.shippingInfo.notes = extraNote.length
+      ? `${notes}${notes ? ' — ' : ''}${extraNote.join(' — ')}`.trim()
       : notes
     order.source = detectOrderSource()
     window.localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify([order, ...existing]))
@@ -285,7 +324,7 @@ export default function Checkout() {
       order.items,
       order.total,
       order.shipping,
-      order.discount,
+      discount,
       order.id,
       token,
     )
@@ -852,6 +891,12 @@ export default function Checkout() {
               <div className="flex justify-between text-emerald-600">
                 <span>الخصم</span>
                 <span className="font-bold">-{formatPrice(discount)} ج.م</span>
+              </div>
+            )}
+            {autoThreshold > 0 && autoAmount > 0 && (
+              <div className="flex justify-between text-emerald-600">
+                <span>خصم تلقائي (طلب فوق {formatPrice(autoThreshold)} ج.م)</span>
+                <span className="font-bold">-{formatPrice(autoAmount)} ج.م</span>
               </div>
             )}
             {memberAmount > 0 && (

@@ -95,6 +95,22 @@ export const adminService = {
     return run(client.from('orders').insert(order).select('id'))
   },
 
+  getStoreSettings() {
+    return run(client.from('store_settings').select('*'))
+  },
+
+  setStoreSetting(key, value) {
+    return run(
+      client
+        .from('store_settings')
+        .upsert(
+          { key, value: value ?? {}, updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
+        )
+        .select('key'),
+    )
+  },
+
   updateOrder(id, patch) {
     return run(client.from('orders').update(patch).eq('id', id))
   },
