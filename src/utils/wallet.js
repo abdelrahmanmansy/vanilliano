@@ -57,7 +57,13 @@ export const openWallet = (walletId) => {
   const target = walletTarget(wallet, platform)
   if (!target) return
 
-  const fallback = wallet.ios || wallet.install || wallet.web
+  // الـfallback لازم يبقى لنفس الجهاز — مش ممكن نودي أندرويد على App Store
+  const fallback =
+    platform === 'android'
+      ? wallet.install || wallet.web
+      : platform === 'ios'
+        ? wallet.ios || wallet.web
+        : wallet.web || wallet.install
 
   // كمبيوتر: افتح في تاب جديد عشان متسيبش الصفحة
   if (!isMobileDevice) {
