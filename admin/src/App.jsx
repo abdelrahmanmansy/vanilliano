@@ -194,6 +194,7 @@ function Login({ onLogin }) {
 function Shell({ user, onLogout }) {
   const [tab, setTab] = useState('overview')
   const [highlightId, setHighlightId] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const openOrder = (id) => {
     setHighlightId(id)
@@ -221,13 +222,38 @@ function Shell({ user, onLogout }) {
 
   return (
     <div className="app">
-      <aside className="sidebar">
+      <header className="mobile-bar">
+        <div className="brand">
+          فانيليانو
+          <span>لوحة الإدارة</span>
+        </div>
+        <button
+          className="hamburger"
+          aria-label="القائمة"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <span className="ham-line" />
+          <span className="ham-line" />
+          <span className="ham-line" />
+        </button>
+      </header>
+
+      {menuOpen && <div className="drawer-backdrop" onClick={() => setMenuOpen(false)} />}
+
+      <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
         <div className="brand">
           فانيليانو
           <span>لوحة الإدارة</span>
         </div>
         {tabs.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
+          <button
+            key={t.id}
+            className={tab === t.id ? 'active' : ''}
+            onClick={() => {
+              setTab(t.id)
+              setMenuOpen(false)
+            }}
+          >
             <span>{t.icon}</span> {t.label}
           </button>
         ))}
