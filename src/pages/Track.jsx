@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { PackageSearch, Loader2 } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { PackageSearch, Loader2, ArrowRight } from 'lucide-react'
 import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice, formatDate, digitsOnly } from '../utils/format'
@@ -166,6 +166,7 @@ const friendlyStatus = (s) => {
 
 export default function Track() {
   const [params] = useSearchParams()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [query, setQuery] = useState(params.get('order') || '')
   const [loading, setLoading] = useState(false)
@@ -342,6 +343,18 @@ export default function Track() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 md:px-6">
+      <button
+        type="button"
+        onClick={() => {
+          if (window.history.length > 1) navigate(-1)
+          else navigate('/')
+        }}
+        className="mb-4 inline-flex items-center gap-2 rounded-full border border-vanilla-200 bg-white px-4 py-2 text-sm font-black text-burgundy-900 transition-all hover:border-vanilla-300 hover:bg-vanilla-50 active:scale-[0.98]"
+      >
+        <ArrowRight size={16} />
+        رجوع
+      </button>
+
       <div className="rounded-[2rem] border border-vanilla-100 bg-white p-6 shadow-sm md:p-10">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-vanilla-100">
