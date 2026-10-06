@@ -233,7 +233,7 @@ export default function Footer() {
             محفوظة
           </p>
           <p className="mt-2 text-sm font-black tracking-wide text-vanilla-200">
-            Designed &amp; Developed by Abdelrahman Mansy
+            Designed &amp; Developed by GATM
           </p>
         </div>
       </div>
