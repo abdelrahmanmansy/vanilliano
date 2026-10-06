@@ -1,11 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { PackageSearch } from 'lucide-react'
-import { categories } from '../data/categories'
+import { useCategories } from '../context/CategoriesContext'
 import Products from './Products'
 import Breadcrumbs from '../components/ui/Breadcrumbs'
 import EmptyState from '../components/ui/EmptyState'
 
 export default function CategoryPage({ slug }) {
+  const { categories } = useCategories()
   const category = categories.find((c) => c.slug === slug)
   const navigate = useNavigate()
 

@@ -17,7 +17,7 @@ import {
 import Logo from './Logo'
 import CartDrawer from './CartDrawer'
 import SearchOverlay from './SearchOverlay'
-import { categories } from '../../data/categories'
+import { useCategories } from '../../context/CategoriesContext'
 import { useCart } from '../../context/CartContext'
 import { useWishlist } from '../../context/WishlistContext'
 import { useAuth } from '../../context/AuthContext'
@@ -43,6 +43,7 @@ export default function Navbar() {
   const { totalItems } = useCart()
   const { wishlist } = useWishlist()
   const { user } = useAuth()
+  const { categories } = useCategories()
 
   const seenKey = 'vanilliano_seen_delivered'
   const unseenCount = delivered.filter(

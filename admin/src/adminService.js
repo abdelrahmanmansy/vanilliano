@@ -17,9 +17,18 @@ export const adminService = {
   },
 
   upsertProduct(product) {
+    const qty = product.qty === '' || product.qty === null || product.qty === undefined
+      ? null
+      : Math.max(0, Math.floor(Number(product.qty)))
     return run(
       client.from('products').upsert(
-        { ...product, price: product.price ? Number(product.price) : null, oldPrice: product.oldPrice ? Number(product.oldPrice) : null, discount: product.discount ? Number(product.discount) : 0 },
+        {
+          ...product,
+          qty,
+          price: product.price ? Number(product.price) : null,
+          oldPrice: product.oldPrice ? Number(product.oldPrice) : null,
+          discount: product.discount ? Number(product.discount) : 0,
+        },
         { onConflict: 'id' },
       ),
     )
@@ -27,6 +36,53 @@ export const adminService = {
 
   deleteProduct(id) {
     return run(client.from('products').delete().eq('id', id))
+  },
+
+  // ===== الأقسام =====
+  getCategories() {
+    return run(client.from('categories').select('*').order('sort_order', { ascending: true }))
+  },
+
+  upsertCategory(category) {
+    return run(
+      client.from('categories').upsert(
+        {
+          ...category,
+          sort_order: Number(category.sort_order) || 0,
+        },
+        { onConflict: 'id' },
+      ),
+    )
+  },
+
+  async deleteCategory(id) {
+    const { count } = await run(
+      client.from('products').select('id', { count: 'exact', head: true }).eq('category', id),
+    )
+    if (count > 0) {
+      throw new Error(`موجود ${count} منتج في القسم ده — انقلهم لقسم تاني الأول`)
+    }
+    return run(client.from('categories').delete().eq('id', id))
+  },
+
+  // رفع صورة القسم للـStorage وإرجاع الرابط العام
+  async uploadCategoryImage(file, categoryId) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `${categoryId}-${Date.now()}.${ext}`
+    const { error } = await client.storage
+      .from('categories')
+      .upload(path, file, { upsert: true, cacheControl: '31536000' })
+    if (error) throw new Error(error.message)
+    const { data } = client.storage.from('categories').getPublicUrl(path)
+    return data.publicUrl
+  },
+
+  async deleteCategoryImage(url) {
+    const marker = '/object/public/categories/'
+    const i = url.indexOf(marker)
+    if (i === -1) return
+    const path = decodeURIComponent(url.slice(i + marker.length))
+    await client.storage.from('categories').remove([path])
   },
 
   getOrders() {

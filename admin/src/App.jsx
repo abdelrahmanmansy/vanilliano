@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { client, adminService } from './adminService'
-import { categories as CATEGORIES } from '../../src/data/categories'
+import { categories as STATIC_CATEGORIES } from '../../src/data/categories'
 import { calculateDiscount, formatPrice, digitsOnly } from '../../src/utils/format'
 import { phoneToken } from '../../src/utils/token'
 import { siteUrl } from '../../src/utils/asset'
@@ -101,6 +101,7 @@ const emptyProduct = {
   oldPrice: '',
   discount: 0,
   stock: 'in',
+  qty: '',
   badge: '',
   image: '',
   description: '',
@@ -210,6 +211,7 @@ function Shell({ user, onLogout }) {
   const tabs = [
     { id: 'overview', label: 'نظرة عامة', icon: '📊' },
     { id: 'products', label: 'المنتجات', icon: '🧁' },
+    { id: 'categories', label: 'الأقسام', icon: '🗂️' },
     { id: 'bestsellers', label: 'الأكثر مبيعاً', icon: '🏆' },
     { id: 'orders', label: 'الطلبات', icon: '🛒' },
     { id: 'reviews', label: 'آراء العملاء', icon: '⭐' },
@@ -240,6 +242,7 @@ function Shell({ user, onLogout }) {
       <main className="main">
         {tab === 'overview' && <Overview onOpenOrder={openOrder} />}
         {tab === 'products' && <Products />}
+        {tab === 'categories' && <Categories />}
         {tab === 'bestsellers' && <BestSellers />}
         {tab === 'orders' && <Orders highlightId={highlightId} />}
         {tab === 'reviews' && <Reviews />}
@@ -406,6 +409,8 @@ function Overview({ onOpenOrder }) {
 
 function Products() {
   const { data: products, loading, error, refresh } = useLoad(() => adminService.getProducts())
+  const { data: catList } = useLoad(() => adminService.getCategories())
+  const CATEGORIES = catList && catList.length ? catList : STATIC_CATEGORIES
   const [editing, setEditing] = useState(null)
   const [flash, setFlash] = useState('')
   const [query, setQuery] = useState('')
@@ -485,6 +490,7 @@ function Products() {
           <ProductForm
             key={editing.id || 'new'}
             product={editing}
+            categories={CATEGORIES}
             onSave={save}
             onCancel={() => setEditing(null)}
           />
@@ -497,7 +503,7 @@ function Products() {
         ) : (
           <table>
             <thead>
-              <tr><th>الصورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>القديم</th><th>الخصم</th><th>المخزون</th><th>شارة</th><th></th></tr>
+              <tr><th>الصورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>القديم</th><th>الخصم</th><th>الكمية</th><th>المخزون</th><th>شارة</th><th></th></tr>
             </thead>
             <tbody>
               {(filtered || []).map((p) => {
@@ -512,8 +518,13 @@ function Products() {
                     <td className="muted">{p.oldPrice ? formatPrice(p.oldPrice) : '—'}</td>
                     <td>{disc > 0 ? <span className="badge red">خصم {disc}%</span> : '—'}</td>
                     <td>
-                      <span className={`badge ${p.stock === 'out' ? 'red' : p.stock === 'limited' ? 'gold' : 'green'}`}>
-                        {p.stock === 'out' ? 'غير متوفر' : p.stock === 'limited' ? 'محدود' : 'متوفر'}
+                      <span className={`badge ${p.qty === 0 ? 'red' : (p.qty != null && p.qty <= 5) ? 'gold' : 'green'}`}>
+                        {p.qty ?? '—'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${p.stock === 'out' || p.qty === 0 ? 'red' : p.stock === 'limited' ? 'gold' : 'green'}`}>
+                        {p.stock === 'out' || p.qty === 0 ? 'غير متوفر' : p.stock === 'limited' ? 'محدود' : 'متوفر'}
                       </span>
                     </td>
                     <td>{p.badge ? <span className="badge gray">{BADGE_OPTIONS.find((b) => b.value === p.badge)?.label || p.badge}</span> : '—'}</td>
@@ -534,7 +545,7 @@ function Products() {
   )
 }
 
-function ProductForm({ product, onSave, onCancel }) {
+function ProductForm({ product, categories = STATIC_CATEGORIES, onSave, onCancel }) {
   const [form, setForm] = useState(product)
   const [busy, setBusy] = useState(false)
 
@@ -549,7 +560,10 @@ function ProductForm({ product, onSave, onCancel }) {
       const price = Number(form.price)
       const oldPrice = form.oldPrice ? Number(form.oldPrice) : null
       const discount = calculateDiscount(price, oldPrice)
-      await onSave({ ...form, id: form.id || `p${Date.now()}`, price, oldPrice, discount, rating: form.rating || 5, reviews: form.reviews || 0, highlights: form.highlights || [] })
+      const qty = form.qty === '' || form.qty === undefined || form.qty === null
+        ? null
+        : Math.max(0, Math.floor(Number(form.qty)))
+      await onSave({ ...form, id: form.id || `p${Date.now()}`, price, oldPrice, discount, qty, rating: form.rating || 5, reviews: form.reviews || 0, highlights: form.highlights || [] })
     } finally {
       setBusy(false)
     }
@@ -569,7 +583,7 @@ function ProductForm({ product, onSave, onCancel }) {
         <div className="field">
           <label>القسم</label>
           <select value={form.category} onChange={(e) => set('category', e.target.value)}>
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -589,6 +603,21 @@ function ProductForm({ product, onSave, onCancel }) {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
+        </div>
+        <div className="field">
+          <label>الكمية المتوفرة (قطعة)</label>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
+            value={form.qty ?? ''}
+            onChange={(e) => set('qty', e.target.value)}
+            placeholder="مثال: 50"
+          />
+          <span className="muted" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+            العميل مش هيقدر يطلب أكتر من الرقم ده — و 0 = غير متوفر
+          </span>
         </div>
         <div className="field">
           <label>الشارة</label>
@@ -615,9 +644,315 @@ function ProductForm({ product, onSave, onCancel }) {
   )
 }
 
+const emptyCategory = {
+  id: '',
+  slug: '',
+  name: '',
+  tagline: '',
+  description: '',
+  icon: 'Sparkles',
+  image: '',
+  color: '#db8c33',
+  sort_order: 0,
+}
+
+const slugify = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '')
+
+function Categories() {
+  const { data: categories, loading, error, refresh } = useLoad(() => adminService.getCategories())
+  const { data: products } = useLoad(() => adminService.getProducts())
+  const [editing, setEditing] = useState(null)
+  const [flash, setFlash] = useState('')
+
+  function notify(msg) {
+    setFlash(msg)
+    clearTimeout(window.__adminCatTimer)
+    window.__adminCatTimer = setTimeout(() => setFlash(''), 4500)
+  }
+
+  useEffect(() => {
+    if (!editing) return
+    const onKey = (e) => { if (e.key === 'Escape') setEditing(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editing])
+
+  const countIn = (id) => (products || []).filter((p) => p.category === id).length
+
+  async function save(category) {
+    try {
+      await adminService.upsertCategory(category)
+      setEditing(null)
+      await refresh()
+      notify(category.id ? 'تم حفظ تعديلات القسم ✓' : 'تمت إضافة القسم الجديد وظهر في المتجر ✓')
+    } catch (e) {
+      notify('تعذر الحفظ: ' + e.message)
+    }
+  }
+
+  async function remove(cat) {
+    const count = countIn(cat.id)
+    if (count > 0) {
+      notify(`القسم ده فيه ${count} منتج — انقلهم لقسم تاني الأول`)
+      return
+    }
+    if (!confirm(`هل أنت متأكد من حذف قسم «${cat.name}»؟`)) return
+    try {
+      await adminService.deleteCategory(cat.id)
+      await refresh()
+      notify('تم حذف القسم ✓')
+    } catch (e) {
+      notify('تعذر الحذف: ' + e.message)
+    }
+  }
+
+  return (
+    <>
+      <div className="space mb">
+        <div>
+          <h1>الأقسام</h1>
+          <p className="sub">عدّل أسماء وصور الأقسام أو أضف أقساماً جديدة — بتظهر في الموقع فوراً</p>
+        </div>
+        <button className="btn primary" onClick={() => setEditing({ ...emptyCategory })}>+ قسم جديد</button>
+      </div>
+
+      <Flash msg={flash} />
+      <ErrorBox error={error} />
+
+      {editing && (
+        <div
+          className="modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditing(null) }}
+        >
+          <CategoryForm
+            key={editing.id || 'new'}
+            category={editing}
+            onSave={save}
+            onCancel={() => setEditing(null)}
+          />
+        </div>
+      )}
+
+      <div className="card">
+        {loading ? (
+          <Loading />
+        ) : !categories || categories.length === 0 ? (
+          <div className="empty">لا توجد أقسام بعد — اضغط «+ قسم جديد»</div>
+        ) : (
+          <table>
+            <thead>
+              <tr><th>الصورة</th><th>الاسم</th><th>الرابط</th><th>اللون</th><th>المنتجات</th><th>الترتيب</th><th></th></tr>
+            </thead>
+            <tbody>
+              {categories.map((c) => (
+                <tr key={c.id}>
+                  <td>
+                    {c.image
+                      ? <img src={assetURL(c.image)} alt="" style={{ width: 46, height: 46, objectFit: 'cover', borderRadius: 8 }} />
+                      : '—'}
+                  </td>
+                  <td className="bold">{c.name}</td>
+                  <td dir="ltr" className="muted">/category/{c.slug}</td>
+                  <td>
+                    <span className="badge gray" style={{ background: c.color, color: '#fff' }}>{c.color}</span>
+                  </td>
+                  <td>{countIn(c.id)}</td>
+                  <td>{c.sort_order}</td>
+                  <td>
+                    <div className="row">
+                      <button className="btn small" onClick={() => setEditing({ ...emptyCategory, ...c })}>تعديل</button>
+                      <button className="btn small red" onClick={() => remove(c)}>حذف</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  )
+}
+
+function CategoryForm({ category, onSave, onCancel }) {
+  const [form, setForm] = useState(category)
+  const [busy, setBusy] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [file, setFile] = useState(null)
+  const [preview, setPreview] = useState(category.image || '')
+  const [err, setErr] = useState('')
+
+  function set(k, v) {
+    setForm((f) => ({ ...f, [k]: v }))
+  }
+
+  function pickFile(e) {
+    const f = e.target.files && e.target.files[0]
+    if (!f) return
+    if (!f.type.startsWith('image/')) {
+      setErr('الملف لازم يكون صورة')
+      return
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      setErr('حجم الصورة أكبر من 5 ميجا')
+      return
+    }
+    setErr('')
+    setFile(f)
+    const reader = new FileReader()
+    reader.onload = () => setPreview(String(reader.result))
+    reader.readAsDataURL(f)
+  }
+
+  async function submit(e) {
+    e.preventDefault()
+    setErr('')
+    const id = form.id || slugify(form.id || form.name) || `c${Date.now()}`
+    const slug = slugify(form.slug || form.name)
+    if (!form.name.trim()) {
+      setErr('اكتب اسم القسم')
+      return
+    }
+    if (!slug) {
+      setErr('اكتب رابط القسم (Slug)')
+      return
+    }
+    setBusy(true)
+    try {
+      let image = form.image || ''
+      if (file) {
+        setUploading(true)
+        image = await adminService.uploadCategoryImage(file, id)
+      }
+      await onSave({
+        ...form,
+        id,
+        slug,
+        image,
+        sort_order: Number(form.sort_order) || 0,
+        tagline: form.tagline || '',
+        description: form.description || '',
+      })
+    } catch (e2) {
+      setErr(e2.message)
+    } finally {
+      setBusy(false)
+      setUploading(false)
+    }
+  }
+
+  async function clearImage() {
+    if (form.image && form.image.startsWith('http')) {
+      await adminService.deleteCategoryImage(form.image).catch(() => {})
+    }
+    setForm((f) => ({ ...f, image: '' }))
+    setPreview('')
+    setFile(null)
+  }
+
+  return (
+    <form className="card modal-form" onSubmit={submit}>
+      <div className="space mb">
+        <h2>{category.id ? 'تعديل قسم' : 'قسم جديد'}</h2>
+        <button type="button" className="btn small" onClick={onCancel}>إلغاء</button>
+      </div>
+
+      {err && <div className="err" style={{ marginBottom: 12 }}>{err}</div>}
+
+      <div className="grid2">
+        <div className="field">
+          <label>اسم القسم</label>
+          <input
+            value={form.name}
+            onChange={(e) => {
+              set('name', e.target.value)
+              if (!category.id && !form.slug) set('slug', slugify(e.target.value))
+            }}
+            required
+          />
+        </div>
+        <div className="field">
+          <label>الرابط (Slug)</label>
+          <input dir="ltr" value={form.slug} onChange={(e) => set('slug', slugify(e.target.value))} placeholder="baking-supplies" />
+        </div>
+        <div className="field">
+          <label>الوصف المختصر</label>
+          <input value={form.tagline} onChange={(e) => set('tagline', e.target.value)} placeholder="يظهر تحت اسم القسم" />
+        </div>
+        <div className="field">
+          <label>الترتيب في الموقع</label>
+          <input type="number" min="0" step="1" value={form.sort_order} onChange={(e) => set('sort_order', e.target.value)} />
+        </div>
+        <div className="field">
+          <label>اللون</label>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="color"
+              value={form.color || '#db8c33'}
+              onChange={(e) => set('color', e.target.value)}
+              style={{ width: 46, height: 36, padding: 2, border: '1px solid var(--line)', borderRadius: 8, background: 'none' }}
+            />
+            <input dir="ltr" value={form.color} onChange={(e) => set('color', e.target.value)} style={{ flex: 1 }} />
+          </div>
+        </div>
+        <div className="field">
+          <label>الأيقونة (اختياري)</label>
+          <input dir="ltr" value={form.icon} onChange={(e) => set('icon', e.target.value)} placeholder="Sparkles" />
+        </div>
+      </div>
+
+      <div className="field">
+        <label>الوصف الكامل</label>
+        <textarea rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} />
+      </div>
+
+      <div className="field">
+        <label>صورة القسم</label>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          {preview && (
+            <img
+              src={preview}
+              alt=""
+              style={{ width: 92, height: 92, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--line)' }}
+            />
+          )}
+          <label className="btn small" style={{ cursor: 'pointer' }}>
+            {preview ? 'تغيير الصورة' : 'رفع صورة'}
+            <input type="file" accept="image/*" onChange={pickFile} style={{ display: 'none' }} />
+          </label>
+          {preview && (
+            <button type="button" className="btn small red" onClick={clearImage}>إزالة الصورة</button>
+          )}
+        </div>
+        <input
+          dir="ltr"
+          value={form.image}
+          onChange={(e) => { set('image', e.target.value); setPreview(e.target.value) }}
+          placeholder="أو الصق رابط صورة"
+          style={{ marginTop: 8 }}
+        />
+        <span className="muted" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+          JPG / PNG / WebP — الحد الأقصى 5 ميجا
+        </span>
+      </div>
+
+      <div className="row">
+        <button className="btn primary" disabled={busy || uploading}>
+          {busy ? (uploading ? 'جارٍ رفع الصورة…' : 'جارٍ الحفظ…') : 'حفظ القسم'}
+        </button>
+        <button type="button" className="btn" onClick={onCancel}>إلغاء</button>
+      </div>
+    </form>
+  )
+}
+
 function BestSellers() {
   const { data: sellers, loading, error } = useLoad(() => adminService.getTopSellers(100))
-
   return (
     <>
       <h1>الأكثر مبيعاً</h1>

@@ -4,13 +4,8 @@ import { Search, X, TrendingUp } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useDebounce } from '../../hooks/useDebounce'
 import { useProducts } from '../../context/ProductsContext'
-import { categories } from '../../data/categories'
+import { useCategories } from '../../context/CategoriesContext'
 import { formatPrice } from '../../utils/format'
-
-const linkifyCategory = (id) => {
-  const cat = categories.find((c) => c.id === id)
-  return cat
-}
 
 export default function SearchOverlay({ open, onClose }) {
   const [query, setQuery] = useState('')
@@ -18,6 +13,7 @@ export default function SearchOverlay({ open, onClose }) {
   const navigate = useNavigate()
   const debouncedQuery = useDebounce(query, 180)
   const { products } = useProducts()
+  const { categories } = useCategories()
 
   useEffect(() => {
     if (open) {
@@ -151,7 +147,7 @@ export default function SearchOverlay({ open, onClose }) {
                   المنتجات
                 </p>
                 {results.map((p) => {
-                  const cat = linkifyCategory(p.category)
+                  const cat = categories.find((c) => c.id === p.category)
                   return (
                     <button
                       key={p.id}

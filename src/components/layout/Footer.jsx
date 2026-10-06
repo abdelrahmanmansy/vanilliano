@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import Logo from './Logo'
-import { categories } from '../../data/categories'
+import { useCategories } from '../../context/CategoriesContext'
 import { STORE, WHATSAPP_LINK } from '../../utils/constants'
 
 const socials = [
@@ -41,6 +41,7 @@ const SocialIcon = ({ path }) => (
 
 export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState('')
+  const { categories } = useCategories()
 
   const handleSubscribe = (e) => {
     e.preventDefault()

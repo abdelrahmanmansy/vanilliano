@@ -111,7 +111,7 @@ export default function Wishlist() {
                     </button>
                     <button
                       onClick={() => addItem(product)}
-                      disabled={product.stock === 'out'}
+                      disabled={product.stock === 'out' || product.qty === 0}
                       aria-label="أضف للسلة"
                       className="flex h-9 w-9 items-center justify-center rounded-full bg-burgundy-700 text-white transition-all hover:scale-105 disabled:opacity-40"
                     >

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { useProducts } from '../context/ProductsContext'
 import { useCatalog } from '../hooks/useCatalog'
-import { categories } from '../data/categories'
+import { useCategories } from '../context/CategoriesContext'
 import { formatPrice, calculateDiscount } from '../utils/format'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
@@ -34,6 +34,7 @@ const trustItems = [
 
 export default function ProductDetail({ productId }) {
   const { products } = useProducts()
+  const { categories } = useCategories()
   const { getById, related } = useCatalog(products)
   const product = getById(productId)
   const [quantity, setQuantity] = useState(1)
@@ -71,7 +72,9 @@ export default function ProductDetail({ productId }) {
   const category = categories.find((c) => c.id === product.category)
   const discount = calculateDiscount(product.price, product.oldPrice)
   const wished = isWishlisted(product.id)
-  const outOfStock = product.stock === 'out'
+  const stockQty = typeof product.qty === 'number' ? product.qty : null
+  const outOfStock = product.stock === 'out' || stockQty === 0
+  const maxQty = stockQty === null ? 99 : Math.max(stockQty, 0)
   const relatedList = related(product, 4)
   const others = relatedList.length >= 4 ? relatedList : [...relatedList, ...relatedList].slice(0, 4)
 
@@ -80,7 +83,15 @@ export default function ProductDetail({ productId }) {
       toast.error('هذا المنتج غير متوفر حالياً')
       return
     }
-    addItem(product, quantity)
+    const safeQty = maxQty > 0 ? Math.min(quantity, maxQty) : 0
+    if (safeQty <= 0) {
+      toast.error('هذا المنتج غير متوفر حالياً')
+      return
+    }
+    if (safeQty < quantity) {
+      toast.error(`الكمية المتاحة ${maxQty} فقط`)
+    }
+    addItem(product, safeQty)
     setJustAdded(true)
     setTimeout(() => setJustAdded(false), 1600)
     if (goToCart) {
@@ -157,7 +168,7 @@ export default function ProductDetail({ productId }) {
                   {category.name}
                 </Link>
               )}
-              <StockBadge stock={product.stock} />
+              <StockBadge stock={product.stock} qty={stockQty} />
             </div>
 
             <h1 className="mb-3 text-2xl font-black leading-snug text-burgundy-950 md:text-3xl">
@@ -192,10 +203,10 @@ export default function ProductDetail({ productId }) {
             {/* Quantity + CTA */}
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <QuantityStepper
-                value={quantity}
+                value={Math.min(quantity, Math.max(maxQty, 1))}
                 onChange={setQuantity}
                 size="lg"
-                max={outOfStock ? 0 : 99}
+                max={outOfStock ? 0 : maxQty}
               />
               <Button
                 size="lg"

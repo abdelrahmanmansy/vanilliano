@@ -3,22 +3,21 @@ import { Heart, ShoppingBag, Eye } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { useWishlist } from '../../context/WishlistContext'
 import { formatPrice, calculateDiscount } from '../../utils/format'
-import { categories } from '../../data/categories'
+import { useCategories } from '../../context/CategoriesContext'
 import RatingStars from '../ui/RatingStars'
 import Badge from '../ui/Badge'
-
-function getCategoryName(categoryId) {
-  return categories.find((c) => c.id === categoryId)?.name || 'منتجات'
-}
 
 export default function ProductCard({ product, index = 0 }) {
   const navigate = useNavigate()
   const { addItem } = useCart()
   const { isWishlisted, toggleItem } = useWishlist()
+  const { categories } = useCategories()
   const wished = isWishlisted(product.id)
 
   const discount = calculateDiscount(product.price, product.oldPrice)
   const outOfStock = product.stock === 'out'
+  const qtyAvailable = typeof product.qty === 'number' ? product.qty : null
+  const soldOut = outOfStock || qtyAvailable === 0
 
   return (
     <div
@@ -39,7 +38,7 @@ export default function ProductCard({ product, index = 0 }) {
               src={product.image}
               alt={product.name}
               loading="lazy"
-              className={`img-zoom h-full w-full object-cover ${outOfStock ? 'opacity-50 saturate-50' : ''}`}
+              className={`img-zoom h-full w-full object-cover ${soldOut ? 'opacity-50 saturate-50' : ''}`}
             />
           </figure>
         ) : (
@@ -47,7 +46,7 @@ export default function ProductCard({ product, index = 0 }) {
             src={product.image}
             alt={product.name}
             loading="lazy"
-            className={`img-zoom h-full w-full object-cover ${outOfStock ? 'opacity-50 saturate-50' : ''}`}
+            className={`img-zoom h-full w-full object-cover ${soldOut ? 'opacity-50 saturate-50' : ''}`}
           />
         )}
         {/* Badges */}
@@ -57,7 +56,7 @@ export default function ProductCard({ product, index = 0 }) {
             <Badge type="offer">{`خصم ${discount}%`}</Badge>
           )}
         </div>
-        {outOfStock && (
+        {soldOut && (
           <div className="absolute inset-0 flex items-center justify-center bg-burgundy-950/30">
             <span className="rounded-full bg-burgundy-950/85 px-5 py-2 text-xs font-black text-white">
               نفدت الكمية
@@ -65,7 +64,7 @@ export default function ProductCard({ product, index = 0 }) {
           </div>
         )}
         {/* Quick view */}
-        {!outOfStock && (
+        {!soldOut && (
           <div className="absolute bottom-3 left-3 translate-y-12 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
             <button
               type="button"
@@ -95,7 +94,7 @@ export default function ProductCard({ product, index = 0 }) {
       {/* Body */}
       <div className="flex flex-1 flex-col p-4">
         <p className="mb-1 text-[11px] font-bold text-burgundy-700/60">
-          {getCategoryName(product.category)}
+          {categories.find((c) => c.id === product.category)?.name || ''}
         </p>
         <Link
           to={`/product/${product.id}`}
@@ -126,7 +125,7 @@ export default function ProductCard({ product, index = 0 }) {
 
           <button
             onClick={() => addItem(product)}
-            disabled={outOfStock}
+            disabled={soldOut}
             aria-label="أضف إلى السلة"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-700 text-white shadow-md shadow-burgundy-700/30 transition-all duration-300 hover:bg-burgundy-800 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-40"
           >

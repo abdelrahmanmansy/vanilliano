@@ -21,6 +21,15 @@ export const supabaseService = {
     return { data: data || null, error }
   },
 
+  async getCategories() {
+    if (!client) return { data: null, error: { message: 'Supabase غير مهيأ' } }
+    const { data, error } = await client
+      .from('categories')
+      .select('*')
+      .order('sort_order', { ascending: true })
+    return { data: data || null, error }
+  },
+
   async getTopSellers(maxCount = 8) {
     if (!client) return { data: [], error: null }
     const { data, error } = await client.rpc('top_sellers', { max_count: maxCount })

@@ -1,4 +1,4 @@
-import { categories } from '../../data/categories'
+import { useCategories } from '../../context/CategoriesContext'
 import { SORT_OPTIONS } from '../../utils/constants'
 import { formatPrice } from '../../utils/format'
 
@@ -11,6 +11,7 @@ export default function ProductFilters({
   onClear,
 }) {
   const set = (key, value) => onChange({ ...filters, [key]: value })
+  const { categories } = useCategories()
 
   const categoryOptions = [
     { id: 'all', name: 'كل الأقسام' },

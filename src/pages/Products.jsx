@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { SlidersHorizontal, Search, X, PackageSearch } from 'lucide-react'
 import { useProducts } from '../context/ProductsContext'
 import { useCatalog } from '../hooks/useCatalog'
-import { categories } from '../data/categories'
+import { useCategories } from '../context/CategoriesContext'
 import ProductGrid from '../components/product/ProductGrid'
 import ProductFilters from '../components/product/ProductFilters'
 import { SORT_OPTIONS } from '../utils/constants'
@@ -57,6 +57,7 @@ export default function Products({ presetCategoryId }) {
   const initialCategory = presetCategoryId || urlCategory || 'all'
 
   const { products } = useProducts()
+  const { categories } = useCategories()
   const { byCategory } = useCatalog(products)
 
   const [filters, setFilters] = useState({
@@ -99,7 +100,7 @@ export default function Products({ presetCategoryId }) {
         doesMatchSearch(p, query) &&
         (filters.minPrice == null || p.price >= filters.minPrice) &&
         (filters.maxPrice == null || p.price <= filters.maxPrice) &&
-        (!filters.inStockOnly || p.stock !== 'out') &&
+        (!filters.inStockOnly || (p.stock !== 'out' && p.qty !== 0)) &&
         (!filters.onSale || p.discount > 0),
     )
     return sortProducts(list, sort)

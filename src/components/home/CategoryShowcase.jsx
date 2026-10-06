@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { categories } from '../../data/categories'
+import { useCategories } from '../../context/CategoriesContext'
 import { useProducts } from '../../context/ProductsContext'
 import { useCatalog } from '../../hooks/useCatalog'
 import SectionHeader from '../ui/SectionHeader'
 
 export default function CategoryShowcase() {
   const { products } = useProducts()
+  const { categories } = useCategories()
   const { byCategory } = useCatalog(products)
   const categoryCount = (id) => byCategory(id).length
   return (

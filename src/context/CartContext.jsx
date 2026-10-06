@@ -5,11 +5,20 @@ import { STORAGE_KEYS } from '../utils/constants'
 
 const CartContext = createContext(null)
 
+// الحد الأقصى للوحدة الواحدة: الكمية المتوفرة لو محددة، وإلا 99 (الحد التاريخي)
+const MAX_PER_ITEM = 99
+
+const stockLimit = (product) =>
+  typeof product?.qty === 'number' && product.qty >= 0
+    ? Math.min(product.qty, MAX_PER_ITEM)
+    : MAX_PER_ITEM
+
 export function CartProvider({ children }) {
   const [cart, setCart, removeCart] = useLocalStorage(STORAGE_KEYS.cart, [])
 
   const addItem = (product, quantity = 1, options = {}) => {
-    if (product.stock === 'out') {
+    const limit = stockLimit(product)
+    if (product.stock === 'out' || limit <= 0) {
       toast.error('هذا المنتج غير متوفر حالياً')
       return
     }
@@ -18,9 +27,14 @@ export function CartProvider({ children }) {
         (item) => item.id === product.id && item.variant === options.variant,
       )
       if (existing) {
+        const next = Math.min(existing.quantity + quantity, limit)
+        if (next === existing.quantity) {
+          toast.error(`الكمية المتاحة من "${product.name}" هي ${limit} فقط`)
+          return current
+        }
         return current.map((item) =>
           item.id === product.id && item.variant === options.variant
-            ? { ...item, quantity: Math.min(item.quantity + quantity, 99) }
+            ? { ...item, quantity: next }
             : item,
         )
       }
@@ -29,7 +43,7 @@ export function CartProvider({ children }) {
         {
           id: product.id,
           variant: options.variant || null,
-          quantity,
+          quantity: Math.min(quantity, limit),
           product: {
             id: product.id,
             name: product.name,
@@ -38,6 +52,7 @@ export function CartProvider({ children }) {
             image: product.image,
             category: product.category,
             stock: product.stock,
+            qty: product.qty,
           },
         },
       ]
@@ -60,11 +75,15 @@ export function CartProvider({ children }) {
       return
     }
     setCart((current) =>
-      current.map((item) =>
-        item.id === id && item.variant === variant
-          ? { ...item, quantity: Math.min(quantity, 99) }
-          : item,
-      ),
+      current.map((item) => {
+        if (item.id !== id || item.variant !== variant) return item
+        const limit = stockLimit(item.product)
+        const next = Math.min(quantity, limit)
+        if (next < quantity) {
+          toast.error(`الكمية المتاحة من "${item.product.name}" هي ${limit} فقط`)
+        }
+        return next < 1 ? item : { ...item, quantity: next }
+      }),
     )
   }
 

@@ -8,17 +8,20 @@ import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { WishlistProvider } from './context/WishlistContext'
 import { ProductsProvider } from './context/ProductsContext'
+import { CategoriesProvider } from './context/CategoriesContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <ProductsProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <App />
-            </WishlistProvider>
-          </CartProvider>
+          <CategoriesProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <App />
+              </WishlistProvider>
+            </CartProvider>
+          </CategoriesProvider>
         </ProductsProvider>
       </AuthProvider>
     </BrowserRouter>
