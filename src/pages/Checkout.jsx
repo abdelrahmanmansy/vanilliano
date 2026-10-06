@@ -193,7 +193,11 @@ export default function Checkout() {
       lines.push(
         `${i + 1}. ${item.name} × ${item.quantity} = ${formatPrice(item.price * item.quantity)} ج.م`,
       )
-      if (item.image) lines.push(`🖼️ صورة المنتج: ${siteURL}${item.image}`)
+      // item.image جاهز بالمسار الكامل (يتضمن /vanilliano/) من asset()
+      if (item.image)
+        lines.push(
+          `🖼️ صورة المنتج: ${/^https?:\/\//.test(item.image) ? item.image : `${window.location.origin}${item.image}`}`,
+        )
     })
     if (orderDiscount > 0) lines.push(`🎁 الخصم: -${formatPrice(orderDiscount)} ج.م`)
     if (memberAmount > 0)
