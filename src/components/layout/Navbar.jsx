@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Gift,
 } from 'lucide-react'
-import { toast } from 'react-hot-toast'
 import Logo from './Logo'
 import CartDrawer from './CartDrawer'
 import SearchOverlay from './SearchOverlay'

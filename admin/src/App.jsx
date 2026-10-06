@@ -117,7 +117,6 @@ function Stars({ n = 5 }) {
 
 export default function AdminApp() {
   const [user, setUser] = useState(undefined)
-  const [tab, setTab] = useState('overview')
 
   useEffect(() => {
     client.auth.getSession().then(({ data }) => {
@@ -911,7 +910,7 @@ function OrderCard({ order, savingId, onStatus, onBack, onCopy, onMessagesChange
     let cancelled = false
     setMsgLoading(true)
     setMsgs([])
-    const fromDb = adminService
+    adminService
       .listOrderMessages(order.id)
       .then((rows) => {
         if (cancelled) return

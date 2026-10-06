@@ -74,9 +74,4 @@ export const openWallet = (walletId) => {
   openApp(target, fallback)
 }
 
-// أي رابط IPA حقيقي بيفتح تطبيق انستا باي على الموبايل — نستخدمه بدل المتجر
-export const hasInstapayDeepLink = Boolean(
-  WALLETS.find((w) => w.id === 'instapay')?.scheme
-)
-
 export default WALLETS

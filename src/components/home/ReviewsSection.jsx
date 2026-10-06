@@ -46,7 +46,7 @@ export default function ReviewsSection() {
       return
     }
     setSubmitting(true)
-    const { data, error } = await supabaseService.addReview({
+    const { error } = await supabaseService.addReview({
       name: name.trim(),
       text: text.trim(),
       rating,

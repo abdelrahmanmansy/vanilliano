@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { PackageSearch, Loader2, ArrowRight } from 'lucide-react'
+import { PackageSearch, ArrowRight } from 'lucide-react'
 import { supabaseService } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice, formatDate, digitsOnly } from '../utils/format'

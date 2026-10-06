@@ -56,7 +56,7 @@ if (email && pass) {
     const { error } = await sb.auth.admin.updateUserById(found.id, { password: pass })
     if (error) authInfo = `set password failed: ${error.message}`
   } else {
-    const { data, error } = await sb.auth.admin.createUser({
+    const { error } = await sb.auth.admin.createUser({
       email,
       password: pass,
       email_confirm: true,
