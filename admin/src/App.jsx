@@ -660,8 +660,10 @@ const slugify = (value) =>
   String(value || '')
     .trim()
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
+
+const safeKey = (value) => value.replace(/[^a-z0-9-]/g, '')
 
 function Categories() {
   const { data: categories, loading, error, refresh } = useLoad(() => adminService.getCategories())
@@ -812,16 +814,16 @@ function CategoryForm({ category, onSave, onCancel }) {
   async function submit(e) {
     e.preventDefault()
     setErr('')
-    const id = form.id || slugify(form.id || form.name) || `c${Date.now()}`
-    const slug = slugify(form.slug || form.name)
+    const slug = safeKey(slugify(form.slug || form.name))
     if (!form.name.trim()) {
       setErr('اكتب اسم القسم')
       return
     }
     if (!slug) {
-      setErr('اكتب رابط القسم (Slug)')
+      setErr('اكتب رابط القسم بالإنجليزي (Slug) — مثلاً: chocolate')
       return
     }
+    const id = form.id || slug
     setBusy(true)
     try {
       let image = form.image || ''

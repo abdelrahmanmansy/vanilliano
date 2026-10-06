@@ -67,8 +67,10 @@ export const adminService = {
 
   // رفع صورة القسم للـStorage وإرجاع الرابط العام
   async uploadCategoryImage(file, categoryId) {
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
-    const path = `${categoryId}-${Date.now()}.${ext}`
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+    // مفتاح لاتيني بس — Supabase Storage يرفض المفاتيح اللي فيها حروف عربية
+    const key = String(categoryId).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'category'
+    const path = `${key}-${Date.now()}.${ext}`
     const { error } = await client.storage
       .from('categories')
       .upload(path, file, { upsert: true, cacheControl: '31536000' })
