@@ -5,6 +5,7 @@
 -- ============================================================
 
 alter table public.orders add column if not exists discount numeric not null default 0;
+alter table public.orders add column if not exists subtotal numeric;
 
 create table if not exists public.store_settings (
   "key" text primary key,
