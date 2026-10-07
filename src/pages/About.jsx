@@ -18,7 +18,7 @@ export default function About() {
           <div className="mb-6 flex justify-center">
             <div className="relative h-40 w-40 overflow-hidden rounded-3xl border-4 border-white/10 shadow-2xl">
               <img
-                src={asset('/images/hero/story.jpg')}
+                src={asset('/images/categories/candy-sweets.jpg')}
                 alt="شغفنا بالحلويات"
                 className="h-full w-full object-cover transition-transform duration-500"
               />
@@ -59,8 +59,8 @@ export default function About() {
             </p>
             <div className="mb-6 overflow-hidden rounded-3xl shadow-lg">
               <img
-                src={asset('/images/hero/story2.jpg')}
-                alt="كيكة فانيليانو الشهية"
+                src={asset('/images/categories/birthday.jpg')}
+                alt="مستلزمات الحفلات من فانيليانو"
                 className="h-64 w-full object-cover"
               />
             </div>
