@@ -113,6 +113,19 @@ export const supabaseService = {
     }
   },
 
+  async decrementStock(productId, qty = 1) {
+    if (!client) return 0
+    const { data, error } = await client.rpc('decrement_stock', {
+      p_id: String(productId),
+      p_qty: Math.max(1, Number(qty) || 1),
+    })
+    if (error) {
+      console.error('decrement_stock:', productId, error.message)
+      return null
+    }
+    return Number(data) || 0
+  },
+
   async addOrder(order) {
     if (!client) return
     try {

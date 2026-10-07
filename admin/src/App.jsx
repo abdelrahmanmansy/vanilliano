@@ -1239,6 +1239,13 @@ function notify(msg) {
   async function recordPurchase(order) {
     try {
       await adminService.createOrder(order)
+      for (const item of Array.isArray(order.items) ? order.items : []) {
+        try {
+          await adminService.decrementStock(item.id, item.quantity)
+        } catch {
+          /* المتجر بياخد الكمية لو المنتج اتشال */
+        }
+      }
       await adminService.addActivity('purchase', `طلب مسجل من اللوحة ${order.id} — ${order.name} — ${formatPrice(order.total)} ج.م`)
       setShowPurchase(false)
       await refresh()

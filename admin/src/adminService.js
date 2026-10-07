@@ -95,6 +95,15 @@ export const adminService = {
     return run(client.from('orders').insert(order).select('id'))
   },
 
+  decrementStock(productId, qty = 1) {
+    return run(
+      client.rpc('decrement_stock', {
+        p_id: String(productId),
+        p_qty: Math.max(1, Number(qty) || 1),
+      }),
+    )
+  },
+
   getStoreSettings() {
     return run(client.from('store_settings').select('*'))
   },

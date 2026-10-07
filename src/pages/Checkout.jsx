@@ -258,7 +258,7 @@ export default function Checkout() {
     return lines.join('\n')
   }
 
-  const saveOrder = () => {
+  const saveOrder = async () => {
     const order = {
       id: `VNL-${Date.now().toString().slice(-6)}`,
       date: new Date().toISOString(),
@@ -294,6 +294,10 @@ export default function Checkout() {
     } catch {
       /* ignore */
     }
+    // تنغيص مخزون كل منتج علطول (بحد أدنى صفر) — متصلة بالطلب
+    for (const item of order.items) {
+      await supabaseService.decrementStock(item.id, item.quantity)
+    }
     supabaseService.addOrder(order)
     supabaseService.addActivity({
       kind: 'purchase',
@@ -310,7 +314,17 @@ export default function Checkout() {
       toast.error('يرجى استكمال بيانات الطلب أولاً')
       return
     }
-    const order = saveOrder()
+    const lowStock = cart.find((item) => {
+      const available = Number(item.product?.qty)
+      return typeof available === 'number' && available >= 0 && Number(item.quantity) > available
+    })
+    if (lowStock) {
+      toast.error(
+        `الكمية المطلوبة من "${lowStock.product?.name}" (${lowStock.quantity}) أكبر من المتاح (${lowStock.product?.qty})`,
+      )
+      return
+    }
+    const order = await saveOrder()
     const token = await phoneToken(order.shippingInfo?.phone)
     if (token) {
       try {
