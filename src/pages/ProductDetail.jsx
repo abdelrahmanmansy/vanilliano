@@ -80,12 +80,12 @@ export default function ProductDetail({ productId }) {
 
   const handleAdd = (goToCart = false) => {
     if (outOfStock) {
-      toast.error('هذا المنتج غير متوفر حالياً')
+      toast.error('الكمية خلصت من هذا المنتج')
       return
     }
     const safeQty = maxQty > 0 ? Math.min(quantity, maxQty) : 0
     if (safeQty <= 0) {
-      toast.error('هذا المنتج غير متوفر حالياً')
+      toast.error('الكمية خلصت من هذا المنتج')
       return
     }
     if (safeQty < quantity) {

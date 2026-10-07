@@ -1,7 +1,7 @@
 const stockLabels = {
   in: { label: 'متوفر', dot: 'bg-emerald-500', text: 'text-emerald-600' },
   low: { label: 'كمية محدودة', dot: 'bg-amber-500', text: 'text-amber-600' },
-  out: { label: 'غير متوفر', dot: 'bg-red-500', text: 'text-red-600' },
+  out: { label: 'الكمية خلصت', dot: 'bg-red-500', text: 'text-red-600' },
 }
 
 export default function StockBadge({ stock, qty, className = '' }) {

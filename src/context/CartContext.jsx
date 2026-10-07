@@ -19,7 +19,7 @@ export function CartProvider({ children }) {
   const addItem = (product, quantity = 1, options = {}) => {
     const limit = stockLimit(product)
     if (product.stock === 'out' || limit <= 0) {
-      toast.error('هذا المنتج غير متوفر حالياً')
+      toast.error('الكمية خلصت من هذا المنتج')
       return
     }
     setCart((current) => {

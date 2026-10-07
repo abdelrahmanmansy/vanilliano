@@ -59,7 +59,7 @@ export default function ProductCard({ product, index = 0 }) {
         {soldOut && (
           <div className="absolute inset-0 flex items-center justify-center bg-burgundy-950/30">
             <span className="rounded-full bg-burgundy-950/85 px-5 py-2 text-xs font-black text-white">
-              نفدت الكمية
+              الكمية خلصت
             </span>
           </div>
         )}
