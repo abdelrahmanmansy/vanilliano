@@ -1262,7 +1262,12 @@ function AnnouncementEditor() {
   useEffect(() => {
     if (!settings) return
     const row = settings.find((s) => s.key === 'announcement_bar')
-    const cfg = row?.value || {}
+    const cfg = row?.value
+    if (!cfg) {
+      setEnabled(true)
+      setText('')
+      return
+    }
     setEnabled(Boolean(cfg.enabled))
     setText((Array.isArray(cfg.items) ? cfg.items : []).join('\n'))
   }, [settings])
