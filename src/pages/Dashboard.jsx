@@ -41,6 +41,15 @@ const STATUS_TEXT = {
 
 const statusText = (s) => STATUS_TEXT[s] || s || '—'
 
+const payLabel = (o) => {
+  const pm = o.payment_method || o.paymentMethod
+  if (pm === 'instapay') return 'انستا باي'
+  if (pm === 'vodafone') return 'فودافون كاش'
+  if (pm === 'fawry') return 'فودافون كاش / انستا باي'
+  if (pm === 'cod') return 'عند الاستلام'
+  return 'واتساب'
+}
+
 export default function Dashboard() {
   const { user, logout } = useAuth()
   const { products } = useProducts()
@@ -248,7 +257,7 @@ export default function Dashboard() {
                       طلب رقم {o.id}
                     </p>
                     <p className="text-[11px] text-burgundy-900/40">
-                      {formatDate(o.created_at || o.date)} · {o.payment_method || o.paymentMethod === 'instapay' ? 'انستا باي' : o.payment_method || o.paymentMethod === 'vodafone' ? 'فودافون كاش' : o.payment_method || o.paymentMethod === 'fawry' ? 'فودافون كاش / انستا باي' : o.payment_method || o.paymentMethod === 'cod' ? 'عند الاستلام' : 'واتساب'}
+                      {formatDate(o.created_at || o.date)} · {payLabel(o)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
