@@ -40,6 +40,7 @@ export default function Navbar() {
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
   const [delivered, setDelivered] = useState([])
+  const [announcementItems, setAnnouncementItems] = useState(null)
   const { totalItems } = useCart()
   const { wishlist } = useWishlist()
   const { user } = useAuth()
@@ -77,6 +78,21 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
+    let alive = true
+    supabaseService.getStoreSettings().then(({ data, error }) => {
+      if (!alive || error || !Array.isArray(data)) return
+      const cfg = (data.find((s) => s.key === 'announcement_bar') || {}).value
+      const items = Array.isArray(cfg?.items)
+        ? cfg.items.map((t) => String(t || '').trim()).filter(Boolean)
+        : []
+      if (cfg?.enabled && items.length > 0) setAnnouncementItems(items)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  useEffect(() => {
     const closeMenus = () => setMobileOpen(false)
     window.addEventListener('resize', closeMenus)
     return () => window.removeEventListener('resize', closeMenus)
@@ -98,15 +114,28 @@ export default function Navbar() {
         }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-6 px-4 whitespace-nowrap">
-          <span className="inline-flex items-center gap-1.5">
-            <Truck size={13} /> شحن مجاني للطلبات فوق 300 ج.م
-          </span>
-          <span className="hidden items-center gap-1.5 sm:inline-flex">
-            <BadgePercent size={13} /> خصم 10% على أول طلب بكود WELCOME10
-          </span>
-          <span className="hidden items-center gap-1.5 md:inline-flex">
-            <ShieldCheck size={13} /> منتجات أصلية 100%
-          </span>
+          {announcementItems ? (
+            announcementItems.map((text, i) => (
+              <span
+                key={`${i}-${text}`}
+                className={`inline-flex items-center gap-1.5 ${i === 0 ? '' : 'hidden sm:inline-flex'}`}
+              >
+                <Gift size={13} /> {text}
+              </span>
+            ))
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-1.5">
+                <Truck size={13} /> شحن مجاني للطلبات فوق 300 ج.م
+              </span>
+              <span className="hidden items-center gap-1.5 sm:inline-flex">
+                <BadgePercent size={13} /> خصم 10% على أول طلب بكود WELCOME10
+              </span>
+              <span className="hidden items-center gap-1.5 md:inline-flex">
+                <ShieldCheck size={13} /> منتجات أصلية 100%
+              </span>
+            </>
+          )}
         </div>
       </div>
 

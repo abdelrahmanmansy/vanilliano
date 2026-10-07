@@ -214,6 +214,7 @@ function Shell({ user, onLogout }) {
     { id: 'products', label: 'المنتجات', icon: '🧁' },
     { id: 'categories', label: 'الأقسام', icon: '🗂️' },
     { id: 'discounts', label: 'الخصومات', icon: '🏷️' },
+    { id: 'announcement', label: 'الإعلانات', icon: '📣' },
     { id: 'bestsellers', label: 'الأكثر مبيعاً', icon: '🏆' },
     { id: 'orders', label: 'الطلبات', icon: '🛒' },
     { id: 'reviews', label: 'آراء العملاء', icon: '⭐' },
@@ -271,6 +272,7 @@ function Shell({ user, onLogout }) {
         {tab === 'products' && <Products />}
         {tab === 'categories' && <Categories />}
         {tab === 'discounts' && <Discounts />}
+        {tab === 'announcement' && <AnnouncementEditor />}
         {tab === 'bestsellers' && <BestSellers />}
         {tab === 'orders' && <Orders highlightId={highlightId} />}
         {tab === 'reviews' && <Reviews />}
@@ -1245,6 +1247,129 @@ function Discounts() {
         <p className="muted" style={{ marginBottom: 4 }}>
           في شاشة «الطلبات → + تسجيل طلب جديد» تقدر تضيف خصماً (مبلغ أو نسبة) على أي طلب بيتسجل يدوياً.
         </p>
+      </div>
+    </>
+  )
+}
+
+function AnnouncementEditor() {
+  const { data: settings, loading, error, refresh } = useLoad(() => adminService.getStoreSettings())
+  const [enabled, setEnabled] = useState(true)
+  const [text, setText] = useState('')
+  const [flash, setFlash] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!settings) return
+    const row = settings.find((s) => s.key === 'announcement_bar')
+    const cfg = row?.value || {}
+    setEnabled(Boolean(cfg.enabled))
+    setText((Array.isArray(cfg.items) ? cfg.items : []).join('\n'))
+  }, [settings])
+
+  function notify(msg) {
+    setFlash(msg)
+    clearTimeout(window.__adminAnnTimer)
+    window.__adminAnnTimer = setTimeout(() => setFlash(''), 4500)
+  }
+
+  const previewItems = text
+    .split('\n')
+    .map((t) => t.trim())
+    .filter(Boolean)
+
+  const save = async () => {
+    if (enabled && previewItems.length === 0) {
+      notify('اكتب رسالة واحدة على الأقل، أو اقفل الشريط')
+      return
+    }
+    setBusy(true)
+    try {
+      await adminService.setStoreSetting('announcement_bar', {
+        enabled: Boolean(enabled),
+        items: previewItems,
+      })
+      await refresh()
+      notify(enabled ? 'تم نشر الشريط الإعلاني ✓' : 'تم إيقاف الشريط — الشكل الافتراضي رجع ✓')
+    } catch (e) {
+      notify('تعذر الحفظ: ' + e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="space mb">
+        <div>
+          <h1>شريط الإعلانات العلوي</h1>
+          <p className="sub">اللي بيظهر فوق الموقع على طول — اكتب اللي انت عايزه فيه</p>
+        </div>
+      </div>
+
+      <Flash msg={flash} />
+      <ErrorBox error={error} />
+
+      <div className="card">
+        {loading ? (
+          <Loading />
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              save()
+            }}
+          >
+            <div className="space" style={{ marginBottom: 12 }}>
+              <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+                <span className="bold">تفعيل الشريط المخصص</span>
+              </label>
+              <p className="muted">
+                كل سطر = رسالة. الرسائل تظهر جنب بعض في الشريط، والسطر الأول بيظهر على الموبايل.
+                لو فضّيت الحقول أو قفلت الشريط، الموقع يرجع للرسائل الافتراضية (شحن مجاني… إلخ).
+              </p>
+            </div>
+            <div className="field">
+              <label>رسائل الشريط (سطر لكل رسالة)</label>
+              <textarea
+                dir="rtl"
+                rows={5}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={'شحن مجاني للطلبات فوق 300 ج.م\nخصم 10% على أول طلب بكود WELCOME10\nمنتجات أصلية 100%'}
+              />
+            </div>
+
+            <div className="field">
+              <label>معاينة</label>
+              <div
+                style={{
+                  background: '#7c2d1f',
+                  color: '#fff',
+                  borderRadius: 10,
+                  padding: '9px 14px',
+                  fontSize: 13,
+                  display: 'flex',
+                  gap: 18,
+                  justifyContent: 'center',
+                  flexWrap: 'wrap',
+                  overflow: 'hidden',
+                }}
+              >
+                {(previewItems.length ? previewItems : ['(الشريط فاضي — هيرجع الافتراضي)']).map((t, i) => (
+                  <span key={i}>🎁 {t}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="row">
+              <button className="btn primary" disabled={busy}>
+                {busy ? 'جارٍ الحفظ…' : 'حفظ ونشر الشريط'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </>
   )
