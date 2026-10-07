@@ -1990,10 +1990,120 @@ function Messages() {
 function Activity() {
   const { data: activity, loading, error } = useLoad(() => adminService.getActivity())
 
+  const escapeHtml = (s = '') =>
+    String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+
+  const reportTitle = 'سجل نشاط المتجر'
+  const reportDate = new Date().toLocaleString('ar-EG', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  const exportPdf = () => {
+    const rows = (activity || [])
+      .map(
+        (a) => `<tr>
+          <td class="kind">${escapeHtml(KIND_LABELS[a.kind] || a.kind)}</td>
+          <td>${escapeHtml(a.label)}</td>
+          <td class="time">${escapeHtml(fmtDate(a.created_at))}</td>
+        </tr>`,
+      )
+      .join('')
+    const html = `<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>${reportTitle}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: #2d1b18; margin: 0; padding: 28px; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .meta { color: #7a6a66; font-size: 12px; margin-bottom: 18px; }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat { border: 1px solid #eadfd8; border-radius: 10px; padding: 6px 12px; font-size: 12px; background: #faf6f3; }
+  .stat b { color: #7c2d1f; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { border-bottom: 1px solid #eadfd8; padding: 7px 10px; text-align: right; vertical-align: top; }
+  th { background: #f4ece7; font-size: 11px; color: #7a6a66; }
+  td.time, td.kind { white-space: nowrap; }
+  .kind { font-weight: 700; }
+  @media print { body { padding: 10px; } }
+</style>
+</head>
+<body>
+  <h1>${reportTitle}</h1>
+  <div class="meta">صدر في ${reportDate} — إجمالي ${(activity || []).length} حدث</div>
+  <div class="stats">
+    ${Object.entries(KIND_LABELS)
+      .map(([k, l]) => {
+        const c = (activity || []).filter((a) => a.kind === k).length
+        return c ? `<div class="stat">${escapeHtml(l)}: <b>${c}</b></div>` : ''
+      })
+      .join('')}
+  </div>
+  <table>
+    <thead><tr><th>النوع</th><th>الحدث</th><th>الوقت</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`
+    const w = window.open('', '_blank', 'width=900,height=600')
+    if (!w) return
+    w.document.open()
+    w.document.write(html)
+    w.document.close()
+    setTimeout(() => {
+      w.focus()
+      w.print()
+    }, 350)
+  }
+
+  const exportCsv = () => {
+    const sep = '\u060C'
+    const esc = (s = '') => `"${String(s).replace(/"/g, '""')}"`
+    const lines = [
+      ['النوع', 'الحدث', 'الوقت']
+        .map(esc)
+        .join(sep),
+      ...(activity || []).map((a) =>
+        [KIND_LABELS[a.kind] || a.kind || '', a.label || '', fmtDate(a.created_at)]
+          .map(esc)
+          .join(sep),
+      ),
+    ]
+    const csv = '\uFEFF' + lines.join('\r\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `activity-${Date.now()}.csv`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <>
-      <h1>سجل النشاط</h1>
-      <p className="sub">كل ما جرى في المتجر: دخول، خروج، شراء، آراء، رسائل</p>
+      <div className="space mb">
+        <div>
+          <h1>سجل النشاط</h1>
+          <p className="sub">كل ما جرى في المتجر: دخول، خروج، شراء، آراء، رسائل</p>
+        </div>
+        {(activity || []).length > 0 && (
+          <div className="row">
+            <button className="btn" onClick={exportPdf}>🖨️ تصدير PDF</button>
+            <button className="btn" onClick={exportCsv}>📊 تصدير Excel</button>
+          </div>
+        )}
+      </div>
       <ErrorBox error={error} />
       <div className="card">
         {loading ? (
