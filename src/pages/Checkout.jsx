@@ -83,6 +83,41 @@ const paymentMethods = [
   },
 ]
 
+const CUSTOMER_KEY = 'vanilliano_customer_v1'
+
+function readCustomerInfo() {
+  try {
+    const raw = window.localStorage.getItem(CUSTOMER_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw)
+    return data && typeof data === 'object' ? data : null
+  } catch {
+    return null
+  }
+}
+
+function writeCustomerInfo(order) {
+  try {
+    window.localStorage.setItem(
+      CUSTOMER_KEY,
+      JSON.stringify({
+        form: {
+          name: order.shippingInfo?.name || '',
+          email: order.shippingInfo?.email || '',
+          phone: order.shippingInfo?.phone || '',
+          city: order.shippingInfo?.city || '',
+          address: order.shippingInfo?.address || '',
+          branch: order.shippingInfo?.branch || '',
+        },
+        payment: order.paymentMethod || null,
+        deliveryMethod: order.deliveryMethod || null,
+      }),
+    )
+  } catch {
+    /* ignore */
+  }
+}
+
 export default function Checkout() {
   const { cart, subtotal, clearCart } = useCart()
   const { user } = useAuth()
@@ -92,10 +127,12 @@ export default function Checkout() {
   const [coupon, setCoupon] = useState(null)
   const [couponInput, setCouponInput] = useState('')
   const [couponError, setCouponError] = useState('')
-  const [payment, setPayment] = useState('instapay')
+  const [payment, setPayment] = useState(() => readCustomerInfo()?.payment || 'instapay')
   const [copiedWallet, setCopiedWallet] = useState(false)
-  const [deliveryMethod, setDeliveryMethod] = useState('delivery')
-  const [form, setForm] = useState({
+  const [deliveryMethod, setDeliveryMethod] = useState(
+    () => readCustomerInfo()?.deliveryMethod || 'delivery',
+  )
+  const [form, setForm] = useState(() => ({
     name: '',
     email: '',
     phone: '',
@@ -103,7 +140,8 @@ export default function Checkout() {
     address: '',
     branch: STORE.branches[0].name,
     notes: '',
-  })
+    ...readCustomerInfo()?.form,
+  }))
   const [errors, setErrors] = useState({})
   const [memberPercent, setMemberPercent] = useState(0)
   const [autoAmount, setAutoAmount] = useState(0)
@@ -325,6 +363,7 @@ export default function Checkout() {
       return
     }
     const order = await saveOrder()
+    writeCustomerInfo(order)
     const token = await phoneToken(order.shippingInfo?.phone)
     if (token) {
       try {
