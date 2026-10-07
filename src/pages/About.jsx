@@ -16,12 +16,21 @@ export default function About() {
         <div className="pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-burgundy-500/20 blur-3xl" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 text-center md:px-6 md:py-20">
           <div className="mb-6 flex justify-center">
-            <div className="relative h-40 w-40 overflow-hidden rounded-3xl border-4 border-white/10 shadow-2xl">
+            <div
+              className="relative h-40 w-40 overflow-hidden rounded-3xl border-4 border-vanilla-300/50 shadow-2xl"
+              style={{ animation: 'cartoonBob 5.5s ease-in-out infinite' }}
+            >
               <img
                 src={asset('/images/hero/story.jpg')}
                 alt="شغفنا بالحلويات"
-                className="h-full w-full object-cover transition-transform duration-500"
+                className="hero-zoom h-full w-full object-cover"
+                style={{ filter: 'saturate(1.2) contrast(1.05)' }}
               />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-burgundy-950/80 to-transparent p-2 text-center">
+                <span className="text-[11px] font-black text-white drop-shadow">
+                  فانيليانو
+                </span>
+              </div>
             </div>
           </div>
           <h1 className="mb-4 text-3xl font-black text-white md:text-5xl">
@@ -57,12 +66,42 @@ export default function About() {
               الفعاليات، والمتاجر الصغيرة — ونحن نفخر بأن نكون جزءاً من أبهى
               احتفالاتهم.
             </p>
-            <div className="mb-6 overflow-hidden rounded-3xl shadow-lg">
+            <div className="relative mb-6 overflow-hidden rounded-3xl shadow-lg">
               <img
                 src={asset('/images/hero/story2.jpg')}
                 alt="من عالم الحلويات في فانيليانو"
-                className="h-64 w-full object-cover"
+                className="hero-zoom h-64 w-full object-cover"
+                style={{ filter: 'saturate(1.15) contrast(1.03)' }}
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950/90 via-burgundy-900/30 to-transparent" />
+              <Sparkles
+                size={22}
+                className="hero-twinkle absolute right-4 top-4 text-vanilla-300"
+              />
+              <Sparkles
+                size={16}
+                className="hero-twinkle absolute left-5 top-9 text-vanilla-200"
+                style={{ animationDelay: '1.2s' }}
+              />
+              <Sparkles
+                size={18}
+                className="hero-twinkle absolute left-10 top-20 text-white"
+                style={{ animationDelay: '0.6s' }}
+              />
+              <div className="absolute inset-x-0 bottom-0 p-4 text-center">
+                <p
+                  className="text-3xl font-black text-white"
+                  style={{ textShadow: '0 2px 14px rgba(43,10,38,0.95)' }}
+                >
+                  فانيليانو
+                </p>
+                <p
+                  className="mt-1 text-xs font-bold text-vanilla-200"
+                  style={{ textShadow: '0 1px 10px rgba(43,10,38,0.95)' }}
+                >
+                  كل قطعة حلوى… تحكي قصة إبداعك
+                </p>
+              </div>
             </div>
             <Link to="/products">
               <Button icon={ArrowLeft} size="lg">

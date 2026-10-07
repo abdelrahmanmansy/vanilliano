@@ -261,3 +261,32 @@ body {
 [data-rmiz-content] {
   direction: rtl;
 }
+
+/* About hero: living zoom + twinkling decorations */
+@keyframes heroZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+.hero-zoom {
+  animation: heroZoom 16s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes heroTwinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.2);
+  }
+}
+.hero-twinkle {
+  animation: heroTwinkle 3.4s ease-in-out infinite;
+}
