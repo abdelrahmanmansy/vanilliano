@@ -315,12 +315,13 @@ function ErrorBox({ error }) {
   return <div className="err" style={{ color: 'var(--red)' }}>{error}</div>
 }
 
-function CleanupNoticeBanner({ onNeedPhone }) {
+function CleanupNoticeBanner() {
   const [notice, setNotice] = useState(null)
   const [ownerPhone, setOwnerPhone] = useState('')
   const [phoneDraft, setPhoneDraft] = useState('')
   const [askPhone, setAskPhone] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [flash, setFlash] = useState('')
 
   useEffect(() => {
     let alive = true
@@ -340,37 +341,43 @@ function CleanupNoticeBanner({ onNeedPhone }) {
 
   if (!notice) return null
 
-  const sendWhatsApp = async () => {
-    let phone = ownerPhone
-    if (!phone) {
+  const waMessage = () =>
+    `🔔 *تنبيه التنظيف التلقائي — سجل النشاط*\n` +
+    `تم حذف *${notice.batch_count} حدث* أقدم من 90 يوم (قبل ${notice.batch_date}).\n` +
+    `اللي فاضل كله حديث. أي حاجة مهمة كنت محتاج تحتفظ بيها لازم تتخزن في أقل من 90 يوم.`
+
+  const openWa = (phone, popup) => {
+    const url = `https://wa.me/2${String(phone).replace(/\D/g, '')}?text=${encodeURIComponent(waMessage())}`
+    if (popup) {
+      popup.location = url
+      popup.focus()
+    } else {
+      window.open(url, '_blank')
+    }
+  }
+
+  const sendWhatsApp = () => {
+    if (!ownerPhone) {
       setAskPhone(true)
       return
     }
-    setBusy(true)
-    try {
-      const msg =
-        `🔔 *تنبيه التنظيف التلقائي — سجل النشاط*\n` +
-        `تم حذف *${notice.batch_count} حدث* أقدم من 90 يوم (قبل ${notice.batch_date}).\n` +
-        `إجمالي الأحداث قبل التنظيف كان في اللوحة، واللي فاضل كله حديث. أي شيء مهم كان محتاج تحتفظ بيه رجّعله قبل هذه المدة.`
-      const w = window.open(
-        `https://wa.me/2${String(phone).replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`,
-        '_blank',
-      )
-      if (w) w.focus()
-    } finally {
-      setBusy(false)
-    }
+    openWa(ownerPhone, window.open('', '_blank'))
   }
 
   const savePhoneAndSend = async () => {
     const phone = phoneDraft.replace(/\D/g, '')
     if (phone.length < 8) return
+    const popup = window.open('', '_blank')
     setBusy(true)
     try {
       await adminService.setStoreSetting('owner_phone', phone)
       setOwnerPhone(phone)
       setAskPhone(false)
-      await sendWhatsApp()
+      openWa(phone, popup)
+    } catch (e) {
+      if (popup) popup.close()
+      setFlash('تعذر حفظ الرقم: ' + e.message)
+      setTimeout(() => setFlash(''), 4000)
     } finally {
       setBusy(false)
     }
@@ -431,6 +438,9 @@ function CleanupNoticeBanner({ onNeedPhone }) {
           <button className="btn small" onClick={hide} disabled={busy}>
             إخفاء
           </button>
+          {flash && (
+            <span style={{ color: 'var(--red)', fontSize: 12 }}>{flash}</span>
+          )}
         </div>
       </div>
     </div>
