@@ -475,10 +475,29 @@ function Overview({ onOpenOrder }) {
     .filter((o) => o.status === 'تم التسليم')
     .reduce((s, o) => s + Number(o.total || 0), 0)
 
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+  const monthSales = orders
+    .filter((o) => {
+      const d = new Date(o.created_at)
+      return (
+        (o.status === 'تم التسليم' || o.status === 'تم استلام الدفع') &&
+        !Number.isNaN(d.getTime()) &&
+        d >= monthStart &&
+        d <= monthEnd
+      )
+    })
+    .reduce((s, o) => s + Number(o.total || 0), 0)
+
   const stats = [
     { lbl: 'المنتجات', num: products.length },
     { lbl: 'طلبات جديدة/قيد التجهيز', num: newOrders },
     { lbl: 'مبيعات مؤكدة (ج.م)', num: formatPrice(totalSales) },
+    {
+      lbl: `مبيعات الشهر (${monthStart.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })} → ${monthEnd.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}) ج.م`,
+      num: formatPrice(monthSales),
+    },
     { lbl: 'آراء بانتظار الموافقة', num: pendingReviews },
     { lbl: 'رسائل بلا رد', num: unreadMessages },
     { lbl: 'عمليات دخول/خروج مسجلة', num: activity.filter((a) => a.kind === 'login' || a.kind === 'logout').length },
