@@ -315,6 +315,128 @@ function ErrorBox({ error }) {
   return <div className="err" style={{ color: 'var(--red)' }}>{error}</div>
 }
 
+function CleanupNoticeBanner({ onNeedPhone }) {
+  const [notice, setNotice] = useState(null)
+  const [ownerPhone, setOwnerPhone] = useState('')
+  const [phoneDraft, setPhoneDraft] = useState('')
+  const [askPhone, setAskPhone] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    Promise.all([adminService.getCleanupNotices(), adminService.getStoreSettings()])
+      .then(([notices, settings]) => {
+        if (!alive) return
+        const latest = Array.isArray(notices) ? notices[0] : null
+        const phone = (settings || []).find((s) => s.key === 'owner_phone')?.value
+        if (latest && !latest.seen) setNotice(latest)
+        if (phone) setOwnerPhone(String(phone))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  if (!notice) return null
+
+  const sendWhatsApp = async () => {
+    let phone = ownerPhone
+    if (!phone) {
+      setAskPhone(true)
+      return
+    }
+    setBusy(true)
+    try {
+      const msg =
+        `🔔 *تنبيه التنظيف التلقائي — سجل النشاط*\n` +
+        `تم حذف *${notice.batch_count} حدث* أقدم من 90 يوم (قبل ${notice.batch_date}).\n` +
+        `إجمالي الأحداث قبل التنظيف كان في اللوحة، واللي فاضل كله حديث. أي شيء مهم كان محتاج تحتفظ بيه رجّعله قبل هذه المدة.`
+      const w = window.open(
+        `https://wa.me/2${String(phone).replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`,
+        '_blank',
+      )
+      if (w) w.focus()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const savePhoneAndSend = async () => {
+    const phone = phoneDraft.replace(/\D/g, '')
+    if (phone.length < 8) return
+    setBusy(true)
+    try {
+      await adminService.setStoreSetting('owner_phone', phone)
+      setOwnerPhone(phone)
+      setAskPhone(false)
+      await sendWhatsApp()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const hide = async () => {
+    try {
+      await adminService.markCleanupNoticeSeen(notice.id)
+    } catch {
+      /* تجاهل */
+    }
+    setNotice(null)
+  }
+
+  return (
+    <div
+      className="card"
+      style={{
+        border: '1px solid var(--line)',
+        background: 'var(--cream)',
+        boxShadow: 'none',
+      }}
+    >
+      <div className="space mb" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="row" style={{ gap: 8, flex: 1, alignItems: 'center' }}>
+          <span style={{ fontSize: 22 }}>🧹</span>
+          <div>
+            <div className="bold" style={{ fontSize: 14 }}>
+              تم التنظيف التلقائي لسجل النشاط
+            </div>
+            <div className="muted" style={{ fontSize: 12 }}>
+              اتشال <b style={{ color: 'var(--burgundy)' }}>{notice.batch_count} حدث</b> أقدم من 90 يوم
+              ({notice.batch_date}). دي رسالة تعريفية تلقائية قبل الحذف.
+            </div>
+          </div>
+        </div>
+
+        {askPhone && (
+          <div className="row" style={{ gap: 6, width: '100%', flexWrap: 'wrap' }}>
+            <input
+              dir="ltr"
+              inputMode="numeric"
+              placeholder="01xxxxxxxxx"
+              value={phoneDraft}
+              onChange={(e) => setPhoneDraft(e.target.value)}
+              style={{ flex: 1, minWidth: 180 }}
+            />
+            <button className="btn primary small" onClick={savePhoneAndSend} disabled={busy}>
+              حفظ الرقم وإرسال
+            </button>
+          </div>
+        )}
+
+        <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+          <button className="btn primary small" onClick={sendWhatsApp} disabled={busy}>
+            📲 إرسال التنبيه على واتساب
+          </button>
+          <button className="btn small" onClick={hide} disabled={busy}>
+            إخفاء
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Overview({ onOpenOrder }) {
   const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
@@ -354,6 +476,8 @@ function Overview({ onOpenOrder }) {
     <>
       <h1>نظرة عامة</h1>
       <p className="sub">ملخص نشاط المتجر الآن</p>
+
+      <CleanupNoticeBanner />
 
       <div className="stats mb">
         {stats.map((s) => (
@@ -2097,12 +2221,15 @@ function Activity() {
           <h1>سجل النشاط</h1>
           <p className="sub">كل ما جرى في المتجر: دخول، خروج، شراء، آراء، رسائل</p>
         </div>
-        {(activity || []).length > 0 && (
-          <div className="row">
-            <button className="btn" onClick={exportPdf}>🖨️ تصدير PDF</button>
-            <button className="btn" onClick={exportCsv}>📊 تصدير Excel</button>
-          </div>
-        )}
+        <div className="row" style={{ alignItems: 'flex-start' }}>
+          <CleanupNoticeBanner />
+          {(activity || []).length > 0 && (
+            <div className="row">
+              <button className="btn" onClick={exportPdf}>🖨️ تصدير PDF</button>
+              <button className="btn" onClick={exportCsv}>📊 تصدير Excel</button>
+            </div>
+          )}
+        </div>
       </div>
       <ErrorBox error={error} />
       <div className="card">

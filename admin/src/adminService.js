@@ -108,6 +108,14 @@ export const adminService = {
     return run(client.from('store_settings').select('*'))
   },
 
+  getCleanupNotices() {
+    return run(client.from('cleanup_notices').select('*').order('id', { ascending: false }).limit(10))
+  },
+
+  markCleanupNoticeSeen(id) {
+    return run(client.from('cleanup_notices').update({ seen: true }).eq('id', id))
+  },
+
   setStoreSetting(key, value) {
     return run(
       client
