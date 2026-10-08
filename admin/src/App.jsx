@@ -607,7 +607,7 @@ function Overview({ onOpenOrder }) {
                 {topCustomer.name || '—'}
               </div>
               <div className="muted">
-                {topCustomer.orders} طلب · {formatPrice(topCustomer.spent)} ج.م إجمالي الإنفاق
+                {formatPrice(topCustomer.orders)} طلب · {formatPrice(topCustomer.spent)} ج.م إجمالي الإنفاق
               </div>
             </div>
             <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
