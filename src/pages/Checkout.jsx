@@ -146,6 +146,7 @@ export default function Checkout() {
   const [memberPercent, setMemberPercent] = useState(0)
   const [autoAmount, setAutoAmount] = useState(0)
   const [autoThreshold, setAutoThreshold] = useState(0)
+  const [vipList, setVipList] = useState([])
 
   useEffect(() => {
     let alive = true
@@ -166,6 +167,8 @@ export default function Checkout() {
     let alive = true
     supabaseService.getStoreSettings().then(({ data, error }) => {
       if (!alive || error || !Array.isArray(data)) return
+      const vipRow = data.find((s) => s.key === 'vip_customers')
+      setVipList(Array.isArray(vipRow?.value) ? vipRow.value : [])
       const row = data.find((s) => s.key === 'threshold_discount')
       const cfg = row?.value
       if (!cfg || !cfg.enabled) {
@@ -191,15 +194,26 @@ export default function Checkout() {
     }
   }, [subtotal])
 
+  const discount = coupon ? coupon.discountValue : 0
+  const vip =
+    vipList.find(
+      (v) =>
+        v &&
+        v.email &&
+        form.email.trim().toLowerCase() === String(v.email).trim().toLowerCase(),
+    ) || null
+  const vipFreeShipping = Boolean(vip?.freeShipping)
+  const vipPercent = Math.min(100, Math.max(0, Number(vip?.discount) || 0))
+  const vipAmount = vipPercent > 0 ? Math.round((subtotal * vipPercent) / 100) : 0
   const shipping =
     deliveryMethod === 'pickup' ||
     subtotal === 0 ||
-    subtotal >= FREE_SHIPPING_THRESHOLD
+    subtotal >= FREE_SHIPPING_THRESHOLD ||
+    vipFreeShipping
       ? 0
       : SHIPPING_COST
-  const discount = coupon ? coupon.discountValue : 0
   const memberAmount = Math.round((subtotal * memberPercent) / 100)
-  const total = Math.max(subtotal - discount - memberAmount - autoAmount, 0) + shipping
+  const total = Math.max(subtotal - discount - memberAmount - autoAmount - vipAmount, 0) + shipping
 
   const setField = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }))
@@ -274,6 +288,9 @@ export default function Checkout() {
       lines.push(`🏷️ خصم تلقائي (طلب فوق ${formatPrice(autoThreshold)} ج.م): -${formatPrice(autoAmount)} ج.م`)
     if (memberAmount > 0)
       lines.push(`🎉 خصم أول طلب لعضو جديد (${memberPercent}%): -${formatPrice(memberAmount)} ج.م`)
+    if (vipAmount > 0)
+      lines.push(`⭐ خصم عميل مميز (${vipPercent}%): -${formatPrice(vipAmount)} ج.م`)
+    if (vipFreeShipping) lines.push('⭐ شحن مجاني (عميل مميز)')
     lines.push(
       '',
       `💵 المجموع الفرعي: ${formatPrice(subtotal)} ج.م`,
@@ -305,7 +322,7 @@ export default function Checkout() {
         quantity: item.quantity,
       })),
       subtotal,
-      discount: discount + autoAmount,
+      discount: discount + autoAmount + vipAmount,
       shipping,
       total,
       paymentMethod: payment,
@@ -322,6 +339,9 @@ export default function Checkout() {
       extraNote.push(`خصم تلقائي (طلب فوق ${formatPrice(autoThreshold)} ج.م) = -${formatPrice(autoAmount)} ج.م`)
     if (memberAmount > 0)
       extraNote.push(`خصم أول طلب ${memberPercent}% = -${formatPrice(memberAmount)} ج.م`)
+    if (vipAmount > 0)
+      extraNote.push(`خصم عميل مميز ${vipPercent}% = -${formatPrice(vipAmount)} ج.م`)
+    if (vipFreeShipping) extraNote.push('شحن مجاني (عميل مميز)')
     order.shippingInfo.notes = extraNote.length
       ? `${notes}${notes ? ' — ' : ''}${extraNote.join(' — ')}`.trim()
       : notes
@@ -958,8 +978,19 @@ export default function Checkout() {
                 <span className="font-bold">-{formatPrice(memberAmount)} ج.م</span>
               </div>
             )}
+            {vipAmount > 0 && (
+              <div className="flex justify-between text-emerald-600">
+                <span>⭐ خصم عميل مميز ({vipPercent}%)</span>
+                <span className="font-bold">-{formatPrice(vipAmount)} ج.م</span>
+              </div>
+            )}
             <div className="flex justify-between text-burgundy-900/70">
-              <span>الشحن</span>
+              <span>
+                الشحن
+                {vipFreeShipping && deliveryMethod !== 'pickup' && subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD && (
+                  <span className="mr-1 text-[11px] font-black text-emerald-600">⭐ عميل مميز</span>
+                )}
+              </span>
               <span className="font-bold">
                 {shipping === 0 ? 'مجاني' : `${formatPrice(shipping)} ج.م`}
               </span>

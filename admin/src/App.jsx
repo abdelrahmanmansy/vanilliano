@@ -455,6 +455,10 @@ function Overview({ onOpenOrder }) {
   const [reviews, setReviews] = useState([])
   const [messages, setMessages] = useState([])
   const [activity, setActivity] = useState([])
+  const [vipList, setVipList] = useState([])
+  const [showTopEmail, setShowTopEmail] = useState(false)
+  const [vipFlash, setVipFlash] = useState('')
+  const [vipPctInput, setVipPctInput] = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -463,10 +467,25 @@ function Overview({ onOpenOrder }) {
       adminService.getReviews(),
       adminService.getMessages(),
       adminService.getActivity(),
+      adminService.getStoreSettings(),
     ])
-      .then(([p, o, r, m, a]) => { setProducts(p); setOrders(o); setReviews(r); setMessages(m); setActivity(a) })
+      .then(([p, o, r, m, a, s]) => {
+        setProducts(p)
+        setOrders(o)
+        setReviews(r)
+        setMessages(m)
+        setActivity(a)
+        const vipRow = Array.isArray(s) ? s.find((row) => row.key === 'vip_customers') : null
+        setVipList(Array.isArray(vipRow?.value) ? vipRow.value : [])
+      })
       .catch(() => {})
   }, [])
+
+  function notifyVip(msg) {
+    setVipFlash(msg)
+    clearTimeout(window.__adminVipTimer)
+    window.__adminVipTimer = setTimeout(() => setVipFlash(''), 4500)
+  }
 
   const pendingReviews = reviews.filter((r) => !r.approved).length
   const unreadMessages = messages.filter((m) => !m.replied).length
@@ -503,6 +522,55 @@ function Overview({ onOpenOrder }) {
     { lbl: 'عمليات دخول/خروج مسجلة', num: activity.filter((a) => a.kind === 'login' || a.kind === 'logout').length },
   ]
 
+  const byEmail = new Map()
+  orders.forEach((o) => {
+    const email = String(o.email || '').trim().toLowerCase()
+    if (!email || o.status === 'ملغي') return
+    const cur = byEmail.get(email) || {
+      email: String(o.email).trim(),
+      name: '',
+      phone: '',
+      orders: 0,
+      spent: 0,
+    }
+    cur.orders += 1
+    cur.spent += Number(o.total || 0)
+    if (!cur.name && o.name) cur.name = String(o.name)
+    if (!cur.phone && o.phone) cur.phone = String(o.phone)
+    byEmail.set(email, cur)
+  })
+  const topCustomer =
+    [...byEmail.values()].sort((a, b) => b.spent - a.spent)[0] || null
+  const vipNow = topCustomer
+    ? vipList.find(
+        (v) => v && v.email && String(v.email).toLowerCase() === topCustomer.email.toLowerCase(),
+      ) || null
+    : null
+
+  const saveVip = async (patch) => {
+    if (!topCustomer) return
+    const next = vipList.map((v) => ({ ...v }))
+    const i = next.findIndex(
+      (v) => String(v?.email || '').toLowerCase() === topCustomer.email.toLowerCase(),
+    )
+    const base = i >= 0 ? next[i] : { email: topCustomer.email }
+    const merged = { ...base, ...patch }
+    const hasPerk = Boolean(merged.freeShipping) || Number(merged.discount) > 0
+    if (i >= 0) {
+      if (hasPerk) next[i] = merged
+      else next.splice(i, 1)
+    } else if (hasPerk) {
+      next.push(merged)
+    }
+    try {
+      await adminService.setStoreSetting('vip_customers', next)
+      setVipList(next)
+      notifyVip(hasPerk ? 'تم تفعيل ميزة العميل المميز ✓' : 'تم إلغاء مزايا العميل المميز')
+    } catch (e) {
+      notifyVip('تعذر الحفظ: ' + e.message)
+    }
+  }
+
   return (
     <>
       <h1>نظرة عامة</h1>
@@ -518,6 +586,123 @@ function Overview({ onOpenOrder }) {
           </div>
         ))}
       </div>
+
+      {topCustomer && (
+        <div
+          className="card mb"
+          style={{ border: '1px solid #e8c98d', background: 'linear-gradient(135deg, #fffaf0, #fdf1dc)' }}
+        >
+          <div className="space mb">
+            <div>
+              <h2>⭐ العميل المميز</h2>
+              <p className="sub">الأعلى إنفاقًا من العملاء المسجّلين بريدهم</p>
+            </div>
+            {vipFlash && (
+              <span style={{ color: '#15803d', fontSize: 12, fontWeight: 800 }}>{vipFlash}</span>
+            )}
+          </div>
+          <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <div className="bold" style={{ fontSize: 16 }}>
+                {topCustomer.name || '—'}
+              </div>
+              <div className="muted">
+                {topCustomer.orders} طلب · {formatPrice(topCustomer.spent)} ج.م إجمالي الإنفاق
+              </div>
+            </div>
+            <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+              {showTopEmail ? (
+                <a href={`mailto:${topCustomer.email}`} dir="ltr" className="bold" title="راسله بالبريد">
+                  {topCustomer.email}
+                </a>
+              ) : (
+                <button className="btn small" onClick={() => setShowTopEmail(true)}>
+                  👤 اضغط لعرض البريد
+                </button>
+              )}
+              <button
+                className="btn small"
+                onClick={() => {
+                  navigator.clipboard?.writeText(topCustomer.email)
+                  notifyVip('تم نسخ البريد ✓')
+                }}
+              >
+                نسخ البريد
+              </button>
+              {topCustomer.phone && (
+                <a
+                  className="btn small"
+                  href={`https://wa.me/2${String(topCustomer.phone).replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="راسله على واتساب"
+                >
+                  💬 واتساب
+                </a>
+              )}
+            </div>
+          </div>
+          <div className="row" style={{ marginTop: 12, flexWrap: 'wrap', gap: 8 }}>
+            <button
+              className={`btn small ${vipNow?.freeShipping ? 'primary' : ''}`}
+              onClick={() =>
+                saveVip({
+                  freeShipping: !vipNow?.freeShipping,
+                  discount: Number(vipNow?.discount) || 0,
+                })
+              }
+            >
+              {vipNow?.freeShipping ? '✓ شحن مجاني مُفعّل' : '🚚 منح شحن مجاني'}
+            </button>
+            <div className="row" style={{ gap: 6 }}>
+              <input
+                type="number"
+                min="1"
+                max="90"
+                placeholder="%"
+                value={vipPctInput}
+                onChange={(e) => setVipPctInput(e.target.value)}
+                style={{ width: 64 }}
+              />
+              <button
+                className="btn small"
+                onClick={() => {
+                  const pct = Number(vipPctInput)
+                  if (!(pct > 0)) {
+                    notifyVip('اكتب نسبة الخصم الأول')
+                    return
+                  }
+                  saveVip({
+                    freeShipping: Boolean(vipNow?.freeShipping),
+                    discount: Math.min(90, Math.round(pct)),
+                  })
+                }}
+              >
+                منح خصم %
+              </button>
+              {Number(vipNow?.discount) > 0 && (
+                <button
+                  className="btn small"
+                  onClick={() =>
+                    saveVip({
+                      freeShipping: Boolean(vipNow?.freeShipping),
+                      discount: 0,
+                    })
+                  }
+                >
+                  إلغاء الخصم ({vipNow.discount}%)
+                </button>
+              )}
+            </div>
+          </div>
+          {vipNow && (
+            <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>
+              الميزة تُطبَّق تلقائيًا في صفحة إتمام الشراء بمجرد كتابة بريد العميل — يظهر
+              سطر «عميل مميز» في الملخص وفي رسالة الواتساب.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="card">
         <div className="space mb">
