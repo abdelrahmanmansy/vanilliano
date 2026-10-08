@@ -884,7 +884,7 @@ function Products() {
                     <td>{cat ? cat.name : p.category}</td>
                     <td className="bold">{formatPrice(p.price)}</td>
                     <td className="muted">{p.oldPrice ? formatPrice(p.oldPrice) : '—'}</td>
-                    <td>{disc > 0 ? <span className="badge red">خصم {disc}%</span> : '—'}</td>
+                    <td>{(p.discount || disc) > 0 ? <span className="badge red">خصم {(p.discount || disc)}%</span> : '—'}</td>
                     <td>
                       <span className={`badge ${p.qty === 0 ? 'red' : (p.qty != null && p.qty <= 5) ? 'gold' : 'green'}`}>
                         {p.qty ?? '—'}
@@ -927,7 +927,9 @@ function ProductForm({ product, categories = STATIC_CATEGORIES, onSave, onCancel
     try {
       const price = Number(form.price)
       const oldPrice = form.oldPrice ? Number(form.oldPrice) : null
-      const discount = calculateDiscount(price, oldPrice)
+      const manualDiscount = form.discount === '' || form.discount === undefined || form.discount === null ? 0 : Math.max(0, Math.min(100, Math.floor(Number(form.discount))))
+      const autoDiscount = calculateDiscount(price, oldPrice)
+      const discount = autoDiscount > 0 ? autoDiscount : manualDiscount
       const qty = form.qty === '' || form.qty === undefined || form.qty === null
         ? null
         : Math.max(0, Math.floor(Number(form.qty)))
@@ -963,6 +965,22 @@ function ProductForm({ product, categories = STATIC_CATEGORIES, onSave, onCancel
         <div className="field">
           <label>السعر القديم (اختياري — يظهر كخصم)</label>
           <input type="number" min="0" step="0.5" value={form.oldPrice} onChange={(e) => set('oldPrice', e.target.value)} />
+        </div>
+        <div className="field">
+          <label>الخصم % (اختياري)</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="1"
+            inputMode="numeric"
+            value={form.discount ?? ''}
+            onChange={(e) => set('discount', e.target.value)}
+            placeholder="مثال: 20"
+          />
+          <span className="muted" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+            لو حددت نسبة الخصم هتظهر كبطاقة خصم على المنتج مباشرةً
+          </span>
         </div>
         <div className="field">
           <label>المخزون</label>

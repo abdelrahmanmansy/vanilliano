@@ -70,7 +70,7 @@ export default function ProductDetail({ productId }) {
   }
 
   const category = categories.find((c) => c.id === product.category)
-  const discount = calculateDiscount(product.price, product.oldPrice)
+  const discount = product.discount > 0 ? Number(product.discount) : calculateDiscount(product.price, product.oldPrice)
   const wished = isWishlisted(product.id)
   const stockQty = typeof product.qty === 'number' ? product.qty : null
   const outOfStock = product.stock === 'out' || stockQty === 0

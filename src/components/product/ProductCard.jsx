@@ -14,7 +14,7 @@ export default function ProductCard({ product, index = 0 }) {
   const { categories } = useCategories()
   const wished = isWishlisted(product.id)
 
-  const discount = calculateDiscount(product.price, product.oldPrice)
+  const discount = product.discount > 0 ? Number(product.discount) : calculateDiscount(product.price, product.oldPrice)
   const outOfStock = product.stock === 'out'
   const qtyAvailable = typeof product.qty === 'number' ? product.qty : null
   const soldOut = outOfStock || qtyAvailable === 0

@@ -27,7 +27,7 @@ export const adminService = {
           qty,
           price: product.price ? Number(product.price) : null,
           oldPrice: product.oldPrice ? Number(product.oldPrice) : null,
-          discount: product.discount ? Number(product.discount) : 0,
+          discount: product.discount ? Math.max(0, Math.min(100, Number(product.discount))) : 0,
         },
         { onConflict: 'id' },
       ),
