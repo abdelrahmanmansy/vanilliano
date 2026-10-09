@@ -58,7 +58,7 @@ export default function Navbar() {
       setDelivered(localList)
       return
     }
-    supabaseService.getMyOrders(user.email).then(({ data }) => {
+    supabaseService.getMyOrders().then(({ data }) => {
       const dbList = (data || []).filter((o) => o.status === 'تم التسليم')
       const map = new Map()
       ;[...localList, ...dbList].forEach((o) => map.set(o.id, o))

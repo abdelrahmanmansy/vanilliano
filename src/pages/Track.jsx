@@ -2,15 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { PackageSearch, ArrowRight } from 'lucide-react'
 import { supabaseService } from '../services/supabase'
-import { useAuth } from '../context/AuthContext'
 import { formatPrice, formatDate, digitsOnly } from '../utils/format'
 import { STORAGE_KEYS } from '../utils/constants'
 import { detectOrderSource } from '../utils/source'
-import { phoneToken } from '../utils/token'
+import { readStoredToken, saveStoredToken } from '../utils/token'
 import Button from '../components/ui/Button'
 
 const PHONE_KEY = 'vanilliano_phone'
-const TOKEN_KEY = 'vanilliano_token'
 
 const stripPhone = (p) => String(p || '').replace(/\D/g, '')
 
@@ -25,22 +23,6 @@ const readStoredPhone = () => {
 const saveStoredPhone = (phone) => {
   try {
     window.localStorage.setItem(PHONE_KEY, String(phone || ''))
-  } catch {
-    /* ignore */
-  }
-}
-
-const readStoredToken = () => {
-  try {
-    return window.localStorage.getItem(TOKEN_KEY) || ''
-  } catch {
-    return ''
-  }
-}
-
-const saveStoredToken = (token) => {
-  try {
-    window.localStorage.setItem(TOKEN_KEY, String(token || ''))
   } catch {
     /* ignore */
   }
@@ -167,7 +149,6 @@ const friendlyStatus = (s) => {
 export default function Track() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
   const [query, setQuery] = useState(params.get('order') || '')
   const [loading, setLoading] = useState(false)
   const [order, setOrder] = useState(null)
@@ -178,6 +159,7 @@ export default function Track() {
   const [sending, setSending] = useState(false)
   const [phone, setPhone] = useState('')
   const [showPhone, setShowPhone] = useState(false)
+  const [lookupId, setLookupId] = useState('')
   const [myOrders, setMyOrders] = useState([])
   const [lookup, setLookup] = useState('idle')
 
@@ -223,8 +205,8 @@ export default function Track() {
 
     let found = findLocalById(id)
 
-    if (!found && user?.email) {
-      const { data: list } = await supabaseService.getMyOrders(user.email)
+    if (!found && readStoredToken()) {
+      const { data: list } = await supabaseService.getMyOrders()
       const mine = (list || []).find((o) => o.id === id)
       if (mine) found = mine
     }
@@ -240,11 +222,12 @@ export default function Track() {
       loadChat(id)
       const linkToken = params.get('c')
       if (linkToken) saveStoredToken(linkToken)
-      if (found.phone) {
-        saveStoredPhone(found.phone)
-        setPhone((cur) => (stripPhone(cur) ? cur : found.phone))
+      const foundPhone = found.phone || found.shippingInfo?.phone
+      if (foundPhone) {
+        saveStoredPhone(foundPhone)
+        setPhone((cur) => (stripPhone(cur) ? cur : foundPhone))
         if (!linkToken) {
-          const tok = await phoneToken(found.phone)
+          const tok = await supabaseService.customerToken(id, foundPhone)
           if (tok) saveStoredToken(tok)
         }
       }
@@ -254,17 +237,20 @@ export default function Track() {
     }
   }
 
-  const loadMyOrders = async (phoneStr) => {
+  // البحث بالموبايل محتاج كمان رقم طلب واحد من نفس الموبايل
+  // (عشان محدش يكتب موبايل حد تاني ويشوف طلباته وعنوانه)
+  const loadMyOrders = async (phoneStr, orderIdStr) => {
     const p = stripPhone(phoneStr)
-    if (!p) return
+    const oid = String(orderIdStr || '').trim().toUpperCase()
+    if (!p || !oid) return
     setLookup('loading')
-    const { data } = await supabaseService.getOrdersByPhone(p)
+    const { data } = await supabaseService.getOrdersByPhone(p, oid)
     const list = Array.isArray(data) ? data.sort(byDate).reverse() : []
     setMyOrders(list)
     setLookup(list.length ? 'done' : 'empty')
     if (list.length) {
       saveStoredPhone(phoneStr)
-      const tok = await phoneToken(p)
+      const tok = await supabaseService.customerToken(oid, p)
       if (tok) saveStoredToken(tok)
     }
   }
@@ -324,10 +310,7 @@ export default function Track() {
         if (!alive || ok) return
       }
       const storedPhone = readStoredPhone()
-      if (stripPhone(storedPhone)) {
-        setPhone(storedPhone)
-        await loadMyOrders(storedPhone)
-      }
+      if (stripPhone(storedPhone)) setPhone(storedPhone)
     }
 
     run()
@@ -382,9 +365,9 @@ export default function Track() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
-                  loadMyOrders(phone)
+                  loadMyOrders(phone, lookupId)
                 }}
-                className="flex gap-2"
+                className="flex flex-col gap-2 sm:flex-row"
               >
                 <input
                   value={phone}
@@ -397,6 +380,14 @@ export default function Track() {
                   inputMode="numeric"
                   autoComplete="tel"
                   placeholder="رقم الموبايل (مثال 01012345678)"
+                  dir="ltr"
+                  className="w-full rounded-2xl border border-vanilla-200 bg-white px-4 py-3 text-sm font-bold text-right text-burgundy-950 outline-none transition-colors focus:border-burgundy-400"
+                />
+                <input
+                  value={lookupId}
+                  onChange={(e) => setLookupId(e.target.value.toUpperCase())}
+                  autoComplete="off"
+                  placeholder="رقم أي طلب ليك (VNL-...)"
                   dir="ltr"
                   className="w-full rounded-2xl border border-vanilla-200 bg-white px-4 py-3 text-sm font-bold text-right text-burgundy-950 outline-none transition-colors focus:border-burgundy-400"
                 />
@@ -416,7 +407,7 @@ export default function Track() {
 
             {lookup === 'empty' && (
               <p className="mt-3 rounded-2xl bg-white p-3 text-center text-xs font-bold text-burgundy-900/50">
-                مفيش طلبات تحت الرقم ده 🙁 — تأكد من الرقم، أو جاوب على واتساب لو محتاج مساعدة.
+                مفيش طلبات بالبيانات دي 🙁 — تأكد من الموبايل ورقم الطلب، أو جاوب على واتساب لو محتاج مساعدة.
               </p>
             )}
 

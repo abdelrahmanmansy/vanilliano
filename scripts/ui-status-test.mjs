@@ -1,4 +1,6 @@
 import { chromium } from 'playwright-core'
+const OWNER_PASS = process.env.OWNER_PASS
+if (!OWNER_PASS) { console.log('set OWNER_PASS env var'); process.exit(1) }
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const SITE = 'https://abdelrahmanmansy.github.io/vanilliano/'
@@ -69,7 +71,7 @@ console.log('6) رسالة الشكر «وصلتنا دفعتك» ظهرت؟', b
 // ===== لوحة المالك: الحالة الجديدة موجودة =====
 await page.goto(BADMIN, { waitUntil: 'networkidle' })
 await page.fill('input[type="email"]', 'abdelrahmanahmedmansy@gmail.com')
-await page.fill('input[type="password"]', 'Van1d4061147!')
+await page.fill('input[type="password"]', OWNER_PASS)
 await page.click('button[type="submit"], .login .btn')
 await page.waitForTimeout(2500)
 await page.locator('button:has-text("الطلبات")').first().click()

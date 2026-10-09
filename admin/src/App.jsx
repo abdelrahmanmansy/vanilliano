@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { client, adminService } from './adminService'
 import { categories as STATIC_CATEGORIES } from '../../src/data/categories'
 import { calculateDiscount, formatPrice, digitsOnly } from '../../src/utils/format'
-import { phoneToken } from '../../src/utils/token'
+import { newOrderId } from '../../src/utils/orderId'
 import { siteUrl } from '../../src/utils/asset'
 
+// ملحوظة: ده للتجربة في الواجهة بس — الحماية الحقيقية في قاعدة البيانات
+// (public.is_admin() + جدول private.admins في 20261008_security_hardening.sql)
 const OWNER_EMAIL = 'abdelrahmanahmedmansy@gmail.com'
 
 const ORDER_STATUSES = ['جديد', 'بانتظار التأكيد', 'تم استلام الدفع', 'قيد التجهيز', 'تم التسليم', 'ملغي']
@@ -1724,14 +1726,8 @@ function notify(msg) {
 
   async function recordPurchase(order) {
     try {
+      // المخزون بيتخصم تلقائياً في قاعدة البيانات أول ما الطلب يتسجل
       await adminService.createOrder(order)
-      for (const item of Array.isArray(order.items) ? order.items : []) {
-        try {
-          await adminService.decrementStock(item.id, item.quantity)
-        } catch {
-          /* المتجر بياخد الكمية لو المنتج اتشال */
-        }
-      }
       await adminService.addActivity('purchase', `طلب مسجل من اللوحة ${order.id} — ${order.name} — ${formatPrice(order.total)} ج.م`)
       setShowPurchase(false)
       await refresh()
@@ -1858,7 +1854,7 @@ function CustomerTrackLink({ order }) {
 
   useEffect(() => {
     let alive = true
-    phoneToken(order?.phone).then((tok) => {
+    adminService.customerToken(order?.phone).then((tok) => {
       if (alive && tok) setUrl(`${siteUrl('track')}?c=${tok}&ref=wa`)
     })
     return () => {
@@ -2097,7 +2093,7 @@ function DeliveryNotify({ order, onCopy }) {
 
   useEffect(() => {
     let alive = true
-    phoneToken(order?.phone).then((t) => {
+    adminService.customerToken(order?.phone).then((t) => {
       if (alive) setToken(t || '')
     })
     return () => {
@@ -2181,7 +2177,7 @@ function PurchaseForm({ products, onSave, onCancel }) {
     setBusy(true)
     try {
       await onSave({
-        id: `VNL-${Date.now().toString().slice(-6)}`,
+        id: newOrderId(),
         name: name.trim(),
         phone: phone.trim() || null,
         payment_method: payment,

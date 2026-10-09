@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { readStoredToken } from '../utils/token'
 
 const url = import.meta.env.VITE_SUPABASE_URL || ''
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
@@ -52,16 +53,42 @@ export const supabaseService = {
     return Number(data) || 0
   },
 
-  async getMyOrders(email) {
-    if (!client || !email) return { data: [], error: null }
-    const { data, error } = await client.rpc('my_orders', { p_email: email })
+  // طلبات العميل الحالي: بالتوكن السري المحفوظ على جهازه (مش بالإيميل —
+  // أي حد كان يقدر يكتب أي إيميل ويشوف طلبات صاحبه)
+  async getMyOrders() {
+    const token = readStoredToken()
+    if (!client || !token) return { data: [], error: null }
+    const { data, error } = await client.rpc('orders_by_token', { p_token: token })
     return { data: data || [], error }
   },
 
-  async getOrdersByPhone(phone) {
-    if (!client || !phone) return { data: [], error: null }
-    const { data, error } = await client.rpc('orders_by_phone', { p_phone: String(phone) })
+  // لازم الموبايل + رقم طلب واحد على الأقل من نفس الموبايل
+  async getOrdersByPhone(phone, orderId) {
+    if (!client || !phone || !orderId) return { data: [], error: null }
+    const { data, error } = await client.rpc('orders_by_phone', {
+      p_phone: String(phone),
+      p_order_id: String(orderId).trim(),
+    })
     return { data: data || [], error }
+  },
+
+  // توكن "كل طلباتك" — السيرفر بيدّيه بس لو رقم الطلب والموبايل متطابقين
+  async customerToken(orderId, phone) {
+    if (!client || !orderId || !phone) return ''
+    const { data, error } = await client.rpc('customer_token', {
+      p_order_id: String(orderId).trim(),
+      p_phone: String(phone),
+    })
+    if (error) return ''
+    return typeof data === 'string' ? data : ''
+  },
+
+  async vipPerks(email) {
+    const none = { freeShipping: false, discount: 0 }
+    if (!client || !email) return none
+    const { data, error } = await client.rpc('vip_perks', { p_email: String(email) })
+    if (error || !data) return none
+    return { freeShipping: Boolean(data.freeShipping), discount: Number(data.discount) || 0 }
   },
 
   async getOrdersByToken(token) {
@@ -113,23 +140,12 @@ export const supabaseService = {
     }
   },
 
-  async decrementStock(productId, qty = 1) {
-    if (!client) return 0
-    const { data, error } = await client.rpc('decrement_stock', {
-      p_id: String(productId),
-      p_qty: Math.max(1, Number(qty) || 1),
-    })
-    if (error) {
-      console.error('decrement_stock:', productId, error.message)
-      return null
-    }
-    return Number(data) || 0
-  },
-
+  // بيرجّع { error } عشان الطلب مايضيعش في صمت لو التسجيل فشل.
+  // المخزون بيتخصم تلقائياً في قاعدة البيانات (trigger) أول ما الطلب يتسجل.
   async addOrder(order) {
-    if (!client) return
+    if (!client) return { error: { message: 'Supabase غير مهيأ' } }
     try {
-      await client.from('orders').insert({
+      const { error } = await client.from('orders').insert({
         id: order.id,
         name: order.shippingInfo?.name || null,
         email: order.shippingInfo?.email || null,
@@ -144,8 +160,11 @@ export const supabaseService = {
         status: order.status || 'جديد',
         source: order.source || null,
       })
-    } catch {
-      /* ignore */
+      if (error) console.error('addOrder:', error.message)
+      return { error }
+    } catch (e) {
+      console.error('addOrder:', e)
+      return { error: { message: String(e?.message || e) } }
     }
   },
 

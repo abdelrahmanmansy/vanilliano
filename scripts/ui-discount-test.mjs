@@ -1,12 +1,14 @@
 import { chromium } from 'playwright-core'
 import { createClient } from '@supabase/supabase-js'
+const OWNER_PASS = process.env.OWNER_PASS
+if (!OWNER_PASS) { console.log('set OWNER_PASS env var'); process.exit(1) }
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const SITE = 'https://abdelrahmanmansy.github.io/vanilliano/'
 const url = 'https://cjhcohxkhgglxqgmuntt.supabase.co'
 const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqaGNvaHhraGdnbHhxZ211bnR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNzg4MzQsImV4cCI6MjEwNTY1NDgzNH0.5-V0L72ypCgIB8akl8_maKNkGrovEp9gZEj4GDx4flA'
 const owner = createClient(url, anonKey)
-await owner.auth.signInWithPassword({ email: 'abdelrahmanahmedmansy@gmail.com', password: 'Van1d4061147!' })
+await owner.auth.signInWithPassword({ email: 'abdelrahmanahmedmansy@gmail.com', password: OWNER_PASS })
 
 const EMAIL = `member-test-${Date.now()}@example.com`
 // تنظيف أي طلبات قديمة لنفس الإيميل (المخزنة قبل الخصم)

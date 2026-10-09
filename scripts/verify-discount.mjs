@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
+const OWNER_PASS = process.env.OWNER_PASS
+if (!OWNER_PASS) { console.log('set OWNER_PASS env var'); process.exit(1) }
 
 const anon = createClient('https://cjhcohxkhgglxqgmuntt.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqaGNvaHhraGdnbHhxZ211bnR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNzg4MzQsImV4cCI6MjEwNTY1NDgzNH0.5-V0L72ypCgIB8akl8_maKNkGrovEp9gZEj4GDx4flA')
 const owner = createClient('https://cjhcohxkhgglxqgmuntt.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqaGNvaHhraGdnbHhxZ211bnR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNzg4MzQsImV4cCI6MjEwNTY1NDgzNH0.5-V0L72ypCgIB8akl8_maKNkGrovEp9gZEj4GDx4flA')
-await owner.auth.signInWithPassword({ email: 'abdelrahmanahmedmansy@gmail.com', password: 'Van1d4061147!' })
+await owner.auth.signInWithPassword({ email: 'abdelrahmanahmedmansy@gmail.com', password: OWNER_PASS })
 
 const q = async (email) => {
   const { data, error } = await anon.rpc('first_order_discount', { p_email: email })

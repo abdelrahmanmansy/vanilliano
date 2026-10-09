@@ -1,16 +1,20 @@
-// توكن شخصي للعميل = SHA-256 من رقم موبايله.
-// نفس الحساب موجود في SQL (orders_by_token) عشان نقدر نجيب طلباته من غير ما يكتب أي حاجة.
-const SALT = "vanilliano";
+// توكن العميل الشخصي ("كل طلباتك") بقى بيتحسب على السيرفر بملح سري
+// (شوف public.customer_token في supabase/migrations/20261008_security_hardening.sql).
+// المتصفح بيحفظه بس عشان يفتح طلبات العميل من غير ما يكتب حاجة.
+export const TOKEN_KEY = 'vanilliano_token'
 
-const digits = (value) => String(value || "").replace(/\D/g, "");
-
-export async function phoneToken(phone) {
-  const num = digits(phone);
-  if (!num) return "";
+export function readStoredToken() {
   try {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${SALT}|${num}`));
-    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    return window.localStorage.getItem(TOKEN_KEY) || ''
   } catch {
-    return "";
+    return ''
+  }
+}
+
+export function saveStoredToken(token) {
+  try {
+    if (token) window.localStorage.setItem(TOKEN_KEY, String(token))
+  } catch {
+    /* ignore */
   }
 }

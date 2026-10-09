@@ -36,7 +36,9 @@ import Button from '../components/ui/Button'
 import Breadcrumbs from '../components/ui/Breadcrumbs'
 import EmptyState from '../components/ui/EmptyState'
 import { detectOrderSource } from '../utils/source'
-import { phoneToken } from '../utils/token'
+import { saveStoredToken } from '../utils/token'
+import { newOrderId } from '../utils/orderId'
+import { useDebounce } from '../hooks/useDebounce'
 import { siteUrl } from '../utils/asset'
 import { openWallet } from '../utils/wallet'
 import { toast } from 'react-hot-toast'
@@ -146,7 +148,24 @@ export default function Checkout() {
   const [memberPercent, setMemberPercent] = useState(0)
   const [autoAmount, setAutoAmount] = useState(0)
   const [autoThreshold, setAutoThreshold] = useState(0)
-  const [vipList, setVipList] = useState([])
+  const [vip, setVip] = useState(null)
+  const debouncedEmail = useDebounce(String(form.email || '').trim().toLowerCase(), 500)
+
+  // مزايا العميل المميز: بنسأل السيرفر عن الإيميل ده بس
+  // (قائمة الـVIP كلها ما بقتش مكشوفة للزوار)
+  useEffect(() => {
+    let alive = true
+    if (!debouncedEmail || !debouncedEmail.includes('@')) {
+      setVip(null)
+      return
+    }
+    supabaseService.vipPerks(debouncedEmail).then((perks) => {
+      if (alive) setVip(perks.freeShipping || perks.discount > 0 ? perks : null)
+    })
+    return () => {
+      alive = false
+    }
+  }, [debouncedEmail])
 
   useEffect(() => {
     let alive = true
@@ -167,8 +186,6 @@ export default function Checkout() {
     let alive = true
     supabaseService.getStoreSettings().then(({ data, error }) => {
       if (!alive || error || !Array.isArray(data)) return
-      const vipRow = data.find((s) => s.key === 'vip_customers')
-      setVipList(Array.isArray(vipRow?.value) ? vipRow.value : [])
       const row = data.find((s) => s.key === 'threshold_discount')
       const cfg = row?.value
       if (!cfg || !cfg.enabled) {
@@ -195,13 +212,6 @@ export default function Checkout() {
   }, [subtotal])
 
   const discount = coupon ? coupon.discountValue : 0
-  const vip =
-    vipList.find(
-      (v) =>
-        v &&
-        v.email &&
-        form.email.trim().toLowerCase() === String(v.email).trim().toLowerCase(),
-    ) || null
   const vipFreeShipping = Boolean(vip?.freeShipping)
   const vipPercent = Math.min(100, Math.max(0, Number(vip?.discount) || 0))
   const vipAmount = vipPercent > 0 ? Math.round((subtotal * vipPercent) / 100) : 0
@@ -315,7 +325,7 @@ export default function Checkout() {
 
   const saveOrder = async () => {
     const order = {
-      id: `VNL-${Date.now().toString().slice(-6)}`,
+      id: newOrderId(),
       date: new Date().toISOString(),
       items: cart.map((item) => ({
         ...item.product,
@@ -352,11 +362,12 @@ export default function Checkout() {
     } catch {
       /* ignore */
     }
-    // تنغيص مخزون كل منتج علطول (بحد أدنى صفر) — متصلة بالطلب
-    for (const item of order.items) {
-      await supabaseService.decrementStock(item.id, item.quantity)
+    // تسجيل الطلب في قاعدة البيانات (المخزون بيتخصم هناك تلقائياً)
+    const { error: saveError } = await supabaseService.addOrder(order)
+    order.saved = !saveError
+    if (saveError && supabaseService.isConfigured()) {
+      toast.error('حصلت مشكلة في تسجيل الطلب على الموقع — ابعته على واتساب عشان نأكده معاك')
     }
-    supabaseService.addOrder(order)
     supabaseService.addActivity({
       kind: 'purchase',
       label: `طلب جديد ${order.id} — ${order.shippingInfo?.name} — ${formatPrice(total)} ج.م`,
@@ -384,13 +395,11 @@ export default function Checkout() {
     }
     const order = await saveOrder()
     writeCustomerInfo(order)
-    const token = await phoneToken(order.shippingInfo?.phone)
+    const token = order.saved
+      ? await supabaseService.customerToken(order.id, order.shippingInfo?.phone)
+      : ''
     if (token) {
-      try {
-        window.localStorage.setItem('vanilliano_token', token)
-      } catch {
-        /* ignore */
-      }
+      saveStoredToken(token)
       order.token = token
     }
     const message = buildMessage(

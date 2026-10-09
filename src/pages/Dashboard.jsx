@@ -67,7 +67,7 @@ export default function Dashboard() {
     )
     setOrders(local)
     if (user?.email) {
-      supabaseService.getMyOrders(user.email).then(({ data }) => {
+      supabaseService.getMyOrders().then(({ data }) => {
         if (!Array.isArray(data)) return
         const merged = [
           ...local,

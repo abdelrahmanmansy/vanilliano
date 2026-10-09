@@ -95,13 +95,12 @@ export const adminService = {
     return run(client.from('orders').insert(order).select('id'))
   },
 
-  decrementStock(productId, qty = 1) {
-    return run(
-      client.rpc('decrement_stock', {
-        p_id: String(productId),
-        p_qty: Math.max(1, Number(qty) || 1),
-      }),
-    )
+  // توكن "كل طلباتك" للعميل — بيتحسب على السيرفر بملح سري (للأدمن بس)
+  async customerToken(phone) {
+    if (!phone) return ''
+    const { data, error } = await client.rpc('admin_customer_token', { p_phone: String(phone) })
+    if (error) return ''
+    return typeof data === 'string' ? data : ''
   },
 
   getStoreSettings() {

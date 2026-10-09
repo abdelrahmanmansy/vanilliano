@@ -46,8 +46,20 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
 ### الخطوة 3: إنشاء حساب صاحب المتجر (مرة واحدة)
 1. في Supabase: **Authentication → Users → Add user**.
 2. اعمل مستخدم بالبريد وكلمة سر صاحب المتجر (مثال: `owner@vanilliano.com` + كلمة سر قوية).
-3. مهم: في كود المصدر يوجد متغيّر `OWNER_EMAIL` داخل `src/context/AuthContext.jsx` —
-   حطه نفس البريد اللي فوق، عشان النظام يتعرف إن صاحب المتجر هو المالك الحقيقي.
+3. اقفل التسجيل العام: **Authentication → Sign In / Providers → Allow new users to sign up = Off**.
+4. بعد ما تشغّل كل ملفات `supabase/migrations` بالترتيب، إيميل صاحب المتجر لازم يكون في جدول `private.admins`
+   (ملف `20261008_security_hardening.sql` بيضيفه). ده اللي بيدّي صلاحيات الأدمن فعلاً في قاعدة البيانات.
+   لو غيرت الإيميل، غيّره كمان في `OWNER_EMAIL` داخل `admin/src/App.jsx` (ده للواجهة بس):
+
+```sql
+insert into private.admins (email) values ('owner@vanilliano.com');
+```
+
+5. سكربتات الاختبار في `scripts/` بتاخد كلمة السر من متغير بيئة، ماتكتبهاش في الكود أبداً:
+
+```bash
+OWNER_PASS='...' node scripts/smoke-test.mjs
+```
 
 ### الخطوة 4: تعبئة قاعدة البيانات بالمنتجات (مرة واحدة)
 بعد ربط `.env` وشغل `npm run dev`:

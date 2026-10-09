@@ -1,4 +1,6 @@
 import { chromium } from 'playwright-core'
+const OWNER_PASS = process.env.OWNER_PASS
+if (!OWNER_PASS) { console.log('set OWNER_PASS env var'); process.exit(1) }
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const ADMIN = 'https://abdelrahmanmansy.github.io/vanilliano/admin/'
@@ -13,7 +15,7 @@ await page.waitForTimeout(1200)
 const email = page.locator('input[type="email"], input[placeholder*="البريد"], input[name="email"]').first()
 await email.fill('abdelrahmanahmedmansy@gmail.com')
 const pass = page.locator('input[type="password"]').first()
-await pass.fill('Van1d4061147!')
+await pass.fill(OWNER_PASS)
 await page.locator('button[type="submit"], button:has-text("دخول"), button:has-text("تسجيل الدخول")').first().click()
 await page.waitForTimeout(2500)
 

@@ -1,5 +1,7 @@
 import { chromium } from 'playwright-core'
 import { createClient } from '@supabase/supabase-js'
+const OWNER_PASS = process.env.OWNER_PASS
+if (!OWNER_PASS) { console.log('set OWNER_PASS env var'); process.exit(1) }
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BADMIN = 'https://abdelrahmanmansy.github.io/vanilliano/admin/'
@@ -7,7 +9,7 @@ const url = 'https://cjhcohxkhgglxqgmuntt.supabase.co'
 const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqaGNvaHhraGdnbHhxZ211bnR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNzg4MzQsImV4cCI6MjEwNTY1NDgzNH0.5-V0L72ypCgIB8akl8_maKNkGrovEp9gZEj4GDx4flA'
 
 const owner = createClient(url, anonKey)
-await owner.auth.signInWithPassword({ email: 'abdelrahmanahmedmansy@gmail.com', password: 'Van1d4061147!' })
+await owner.auth.signInWithPassword({ email: 'abdelrahmanahmedmansy@gmail.com', password: OWNER_PASS })
 
 // تنظيف أي بقايا من تشغيل سابق ثم إنشاء رأي تجريبي
 await owner.from('reviews').delete().eq('name', 'تست مراجعة آلية')
@@ -22,7 +24,7 @@ page.on('pageerror', (e) => pageErrors.push(e.message))
 
 await page.goto(BADMIN, { waitUntil: 'networkidle' })
 await page.fill('input[type="email"]', 'abdelrahmanahmedmansy@gmail.com')
-await page.fill('input[type="password"]', 'Van1d4061147!')
+await page.fill('input[type="password"]', OWNER_PASS)
 await page.click('button[type="submit"], .login .btn')
 await page.waitForTimeout(1500)
 
