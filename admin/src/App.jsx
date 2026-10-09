@@ -926,10 +926,12 @@ function ProductForm({ product, categories = STATIC_CATEGORIES, onSave, onCancel
     setBusy(true)
     try {
       const price = Number(form.price)
-      const oldPrice = form.oldPrice ? Number(form.oldPrice) : null
       const manualDiscount = form.discount === '' || form.discount === undefined || form.discount === null ? 0 : Math.max(0, Math.min(100, Math.floor(Number(form.discount))))
-      const autoDiscount = calculateDiscount(price, oldPrice)
-      const discount = autoDiscount > 0 ? autoDiscount : manualDiscount
+      // لو المستخدم حدد نسبة خصم يدوية: هي المصدر الوحيد للخصم،
+      // ومنشيل «السعر القديم» عشان مايحجبش النسبة (السعر القديم بيتحسب تلقائي في المتجر).
+      const hasManual = manualDiscount > 0
+      const oldPrice = hasManual ? null : form.oldPrice ? Number(form.oldPrice) : null
+      const discount = hasManual ? manualDiscount : calculateDiscount(price, oldPrice)
       const qty = form.qty === '' || form.qty === undefined || form.qty === null
         ? null
         : Math.max(0, Math.floor(Number(form.qty)))
@@ -979,7 +981,7 @@ function ProductForm({ product, categories = STATIC_CATEGORIES, onSave, onCancel
             placeholder="مثال: 20"
           />
           <span className="muted" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
-            لو حددت نسبة الخصم هتظهر كبطاقة خصم على المنتج مباشرةً
+            لو حددت نسبة الخصم هنزّل السعر تلقائيًا و«السعر القديم» هيظهر مشطوب في المتجر، وبيتحسب في السلة والدفع.
           </span>
         </div>
         <div className="field">

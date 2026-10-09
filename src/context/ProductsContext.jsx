@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { products as defaultProducts } from '../data/products'
 import { supabaseService } from '../services/supabase'
+import { normalizeProduct } from '../utils/pricing'
 
 const ProductsContext = createContext(null)
 
@@ -43,7 +44,9 @@ function persistLocal(list) {
 }
 
 export function ProductsProvider({ children }) {
-  const [products, setProducts] = useState(() => readLocalOverrides() || defaultProducts)
+  const [products, setProducts] = useState(() =>
+    (readLocalOverrides() || defaultProducts).map(normalizeProduct),
+  )
   const [remoteReady, setRemoteReady] = useState(false)
 
   useEffect(() => {
@@ -57,8 +60,9 @@ export function ProductsProvider({ children }) {
         const { data, error } = await supabaseService.getProducts()
         if (cancelled) return
         if (!error && Array.isArray(data) && data.length > 0) {
-          setProducts(data)
-          persistLocal(data)
+          const normalized = data.map(normalizeProduct)
+          setProducts(normalized)
+          persistLocal(normalized)
         }
       } catch {
         /* ignore */

@@ -1,7 +1,8 @@
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useMemo, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { STORAGE_KEYS } from '../utils/constants'
+import { useProducts } from './ProductsContext'
 
 const CartContext = createContext(null)
 
@@ -15,6 +16,38 @@ const stockLimit = (product) =>
 
 export function CartProvider({ children }) {
   const [cart, setCart, removeCart] = useLocalStorage(STORAGE_KEYS.cart, [])
+  const { products } = useProducts()
+
+  // حدّث أسعار/مخزون عناصر السلة مع أحدث بيانات المنتجات (الخصومات مثلًا)
+  // عشان الخصم يظهر حتى لو المنتج كان مضاف للسلة قبل تطبيقه.
+  useEffect(() => {
+    if (!Array.isArray(products) || products.length === 0) return
+    setCart((current) => {
+      let changed = false
+      const next = current.map((item) => {
+        const fresh = products.find((p) => p.id === item.id)
+        if (!fresh) return item
+        const patch = {
+          price: fresh.price,
+          oldPrice: fresh.oldPrice,
+          stock: fresh.stock,
+          qty: fresh.qty,
+        }
+        const prev = item.product || {}
+        if (
+          prev.price === patch.price &&
+          prev.oldPrice === patch.oldPrice &&
+          prev.stock === patch.stock &&
+          prev.qty === patch.qty
+        ) {
+          return item
+        }
+        changed = true
+        return { ...item, product: { ...prev, ...patch } }
+      })
+      return changed ? next : current
+    })
+  }, [products, setCart])
 
   const addItem = (product, quantity = 1, options = {}) => {
     const limit = stockLimit(product)
