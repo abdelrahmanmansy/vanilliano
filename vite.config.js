@@ -4,8 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
+// Cloudflare Pages sets CF_PAGES=1 during its build and serves from the site root,
+// so it needs base "/". Everywhere else (GitHub Pages) keeps the /vanilliano/ subpath.
+const onCloudflarePages = process.env.CF_PAGES === '1'
+
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/vanilliano/' : '/',
+  base: command === 'build' && !onCloudflarePages ? '/vanilliano/' : '/',
   plugins: [react(), tailwindcss()],
   build: {
     rollupOptions: {
