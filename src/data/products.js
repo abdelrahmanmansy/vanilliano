@@ -3,12 +3,12 @@ import { calculateDiscount } from '../utils/format'
 import { sweetartProducts } from './sweetart'
 
 const P = (id, data) => {
-  const manualDiscount = data.discount > 0 ? Number(data.discount) : 0
+  const manualDiscount = data.discount && Number(data.discount) > 0 ? Number(data.discount) : 0
   const autoDiscount = calculateDiscount(data.price, data.oldPrice)
   const discount = manualDiscount > 0 ? manualDiscount : autoDiscount
   return {
     id,
-    badge: data.oldPrice > data.price || discount > 0 ? 'offer' : data.badge || null,
+    badge: (data.oldPrice > data.price || discount > 0) && discount > 0 ? 'offer' : data.badge || null,
     discount,
     ...data,
     image: asset(data.image || `/images/products/${id}.svg`),
